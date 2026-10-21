@@ -4,9 +4,9 @@
 
 | Dato       | Valor                                                    |
 |------------|----------------------------------------------------------|
-| Fechas     | Del 26 de octubre al 23 de diciembre de 2026             |
-| Horario    | De 15:00 a 17:30 (en octubre, de 15:00 a 17:15)          |
-| Duración   | 39 horas: 16 sesiones                                    |
+| Fechas     | Del 21 de octubre al 23 de diciembre de 2026             |
+| Horario    | De 15:00 a 17:30 (el 13 de noviembre, de 9:00 a 13:00)   |
+| Duración   | 39 horas: 15 sesiones                                    |
 | Modalidad  | Remoto                                                   |
 | Calendario | En el [README](../README.md#calendario)                  |
 
