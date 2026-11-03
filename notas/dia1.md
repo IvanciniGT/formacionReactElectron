@@ -354,5 +354,5 @@ Irá publicada a un registry de librerias NPM (nexus). Gitlab registry... igual 
 React           No tiene Contenedor de Inversión de control
 
 Angular         
-   Host         Contenedor de Inversión de control
+   Host         Contenedor de Inversión de control que facilita la inyección de dependencias en aplicaciones 
  Spring         
