@@ -1,0 +1,264 @@
+asyncapi: 3.1.0
+
+info:
+  title: Catálogo de apuestas · cambios en tiempo real
+  version: 0.0.0
+  description: |
+    Los cambios del catálogo que ve un jugador, en cuanto se producen: cuotas que suben o
+    bajan, mercados que se suspenden o se cierran, eventos que empiezan o terminan.
+
+    **Es el complemento del API REST (`openapi.yaml`), no su sustituto.** El frontal carga
+    por REST lo que va a enseñar, y cada respuesta trae una `marca`. Después se suscribe
+    aquí a esos eventos **desde esa marca**, y recibe solo los cambios: ninguno se pierde
+    entre la carga y la suscripción. Los esquemas son los mismos que en REST.
+
+    **Se hace con SignalR** (ASP.NET), que va por WebSocket y, si no hay, por SSE o *long
+    polling*, sin cambiar nada de lo que se describe aquí. Cada mensaje es una invocación
+    de SignalR: `target` es el nombre del mensaje y `arguments`, un único objeto con el
+    contenido que se describe aquí.
+
+    ```ts
+    const conexion = new HubConnectionBuilder()
+      .withUrl("/v1/hubs/catalogo")
+      .withAutomaticReconnect()
+      .build();
+    conexion.on("Cambios", (cambios) => { /* actualizar la caché de React Query */ });
+    await conexion.start();
+    await conexion.invoke("Suscribir", { eventoId, desde: evento.marca });
+    ```
+
+    **Al reconectar hay que volver a suscribirse**, a cada evento, con la última marca
+    recibida de él: SignalR no conserva las suscripciones de una conexión a la siguiente.
+    El servidor manda lo que se haya perdido o, si la marca es demasiado antigua, un
+    `Recargar`.
+
+    Es público, como el catálogo REST: se puede ver sin haber iniciado sesión.
+
+    **Validaciones.** Los esquemas son los de `openapi.yaml`, con sus restricciones y su
+    `x-invariante`. Lo propio de este canal (la suscripción y los estados con los que un
+    evento deja de verse) está en este fichero, con el mismo criterio.
+
+defaultContentType: application/json
+
+servers:
+  local:
+    host: localhost:5080
+    protocol: ws
+    pathname: /v1/hubs/catalogo
+    description: En local. En cualquier otro entorno, wss en el mismo dominio que el API REST.
+
+channels:
+  catalogo:
+    address: /v1/hubs/catalogo
+    title: Hub del catálogo
+    description: Una sola conexión por jugador, con todas sus suscripciones dentro.
+    messages:
+      suscribir:
+        $ref: "#/components/messages/Suscribir"
+      cancelar:
+        $ref: "#/components/messages/Cancelar"
+      cambios:
+        $ref: "#/components/messages/Cambios"
+      cambioDeEvento:
+        $ref: "#/components/messages/CambioDeEvento"
+      recargar:
+        $ref: "#/components/messages/Recargar"
+
+# Desde el punto de vista del servidor: receive es lo que manda el frontal, send lo que
+# le llega al frontal.
+operations:
+  suscribirse:
+    action: receive
+    channel:
+      $ref: "#/channels/catalogo"
+    summary: El frontal se suscribe a un evento.
+    description: |
+      Una vez por evento que tenga en pantalla: los del listado que se ven, o el que está
+      abierto en el detalle. Si se suscribe otra vez al mismo evento, la nueva suscripción
+      sustituye a la anterior (por ejemplo, para cambiar los mercados al abrir otro grupo).
+
+      La invocación falla (`HubException`) si el evento no existe o no es visible, o si la
+      conexión ya tiene 50 suscripciones. SignalR solo transmite un texto de error, así que
+      el mensaje **empieza por un código** que el frontal puede reconocer:
+
+      | Código | Cuándo |
+      |---|---|
+      | `EventoNoEncontrado` | El evento no existe o ya no se ve |
+      | `DemasiadasSuscripciones` | La conexión ya sigue 50 eventos |
+
+      Por ejemplo: `EventoNoEncontrado: no hay ningún evento visible con id …`.
+    messages:
+      - $ref: "#/channels/catalogo/messages/suscribir"
+
+  cancelarSuscripcion:
+    action: receive
+    channel:
+      $ref: "#/channels/catalogo"
+    summary: El frontal deja de seguir un evento.
+    description: Cuando el evento sale de la pantalla. Cancelar algo a lo que no se está suscrito no es un error.
+    messages:
+      - $ref: "#/channels/catalogo/messages/cancelar"
+
+  enviarCambios:
+    action: send
+    channel:
+      $ref: "#/channels/catalogo"
+    summary: Han cambiado cuotas o estados de mercado de un evento suscrito.
+    messages:
+      - $ref: "#/channels/catalogo/messages/cambios"
+
+  enviarCambioDeEvento:
+    action: send
+    channel:
+      $ref: "#/channels/catalogo"
+    summary: Un evento suscrito ha cambiado de estado.
+    messages:
+      - $ref: "#/channels/catalogo/messages/cambioDeEvento"
+
+  pedirRecarga:
+    action: send
+    channel:
+      $ref: "#/channels/catalogo"
+    summary: El frontal tiene que volver a cargar el evento por REST.
+    messages:
+      - $ref: "#/channels/catalogo/messages/recargar"
+
+components:
+  messages:
+    Suscribir:
+      name: Suscribir
+      title: Suscribirse a un evento
+      payload:
+        $ref: "#/components/schemas/Suscripcion"
+      examples:
+        - name: todoElEvento
+          summary: Al abrir el evento, desde la marca del GET
+          payload:
+            eventoId: 3f2b8c1d-9e4a-4b7c-8d2e-1a5f6c9b0e21
+            desde: '48213'
+        - name: soloUnGrupo
+          summary: 'Al abrir la pestaña «goles»: solo sus mercados'
+          payload:
+            eventoId: 3f2b8c1d-9e4a-4b7c-8d2e-1a5f6c9b0e21
+            desde: '48215'
+            mercados:
+              - 5c9e2a7b-1d3f-4e8a-b6c4-9f0d2e8a1b32
+
+    Cancelar:
+      name: Cancelar
+      title: Cancelar la suscripción a un evento
+      examples:
+        - name: alSalir
+          summary: El jugador sale del evento
+          payload:
+            eventoId: 3f2b8c1d-9e4a-4b7c-8d2e-1a5f6c9b0e21
+      payload:
+        type: object
+        required: [eventoId]
+        properties:
+          eventoId:
+            $ref: "./openapi.yaml#/components/schemas/Id"
+
+    Cambios:
+      name: Cambios
+      title: Cambios de cuotas y de mercados
+      summary: El mismo formato que `GET /v1/eventos/{eventoId}/cuotas`, más el evento al que pertenecen.
+      examples:
+        - name: bajaUnaCuota
+          summary: Baja la cuota del Madrid y se suspende un mercado
+          payload:
+            eventoId: 3f2b8c1d-9e4a-4b7c-8d2e-1a5f6c9b0e21
+            marca: '48216'
+            cuotas:
+              - seleccionId: 9b1e4c7a-2f3d-4a8e-b5c6-0d9f8e7a6b51
+                mercadoId: 5c9e2a7b-1d3f-4e8a-b6c4-9f0d2e8a1b31
+                cuota: 2.00
+                tendencia: baja
+            mercados:
+              - mercadoId: 5c9e2a7b-1d3f-4e8a-b6c4-9f0d2e8a1b32
+                estado: suspendido
+      payload:
+        allOf:
+          - type: object
+            required: [eventoId]
+            properties:
+              eventoId:
+                $ref: "./openapi.yaml#/components/schemas/Id"
+          - $ref: "./openapi.yaml#/components/schemas/CambiosDeCuotas"
+
+    CambioDeEvento:
+      name: CambioDeEvento
+      title: El evento ha cambiado de estado
+      examples:
+        - name: empieza
+          summary: Empieza el partido
+          payload:
+            eventoId: 3f2b8c1d-9e4a-4b7c-8d2e-1a5f6c9b0e21
+            estado: enJuego
+            marca: '48230'
+        - name: termina
+          summary: 'Termina: deja de verse y la suscripción se cancela sola'
+          payload:
+            eventoId: 3f2b8c1d-9e4a-4b7c-8d2e-1a5f6c9b0e21
+            estado: finalizado
+            marca: '48390'
+      payload:
+        $ref: "#/components/schemas/CambioDeEvento"
+
+    Recargar:
+      name: Recargar
+      title: Volver a cargar el evento
+      examples:
+        - name: marcaAntigua
+          summary: La marca con la que se suscribió ya no sirve
+          payload:
+            eventoId: 3f2b8c1d-9e4a-4b7c-8d2e-1a5f6c9b0e21
+      summary: |
+        La marca con la que se suscribió es demasiado antigua y ya no se pueden calcular los
+        cambios. El frontal tiene que pedir el evento otra vez por REST y suscribirse con la
+        marca nueva. Es el equivalente del `410` de REST.
+      payload:
+        type: object
+        required: [eventoId]
+        properties:
+          eventoId:
+            $ref: "./openapi.yaml#/components/schemas/Id"
+
+  schemas:
+    Suscripcion:
+      type: object
+      required: [eventoId, desde]
+      properties:
+        eventoId:
+          $ref: "./openapi.yaml#/components/schemas/Id"
+        desde:
+          $ref: "./openapi.yaml#/components/schemas/Marca"
+          description: |
+            La marca de la respuesta REST con la que se cargó el evento, o la del último
+            `Cambios` recibido de él al reconectar. Es obligatoria: sin ella no se puede
+            garantizar que no se pierde ningún cambio.
+        mercados:
+          type: array
+          description: Solo estos mercados (los del grupo abierto). Sin él, todos los visibles del evento.
+          items:
+            $ref: "./openapi.yaml#/components/schemas/Id"
+          maxItems: 100
+
+    # El catálogo REST solo enseña eventos programados, en juego o interrumpidos. Aquí
+    # llegan además los estados con los que un evento deja de verse, para que el frontal
+    # sepa qué decirle al jugador. Después de uno de ellos, la suscripción se cancela sola.
+    EstadoEventoNotificado:
+      type: string
+      enum: [programado, enJuego, interrumpido, finalizado, aplazado, cancelado]
+      x-invariante: Estado<EstadoEvento> (Comun.Invariantes)
+
+    CambioDeEvento:
+      type: object
+      required: [eventoId, estado, marca]
+      properties:
+        eventoId:
+          $ref: "./openapi.yaml#/components/schemas/Id"
+        estado:
+          $ref: "#/components/schemas/EstadoEventoNotificado"
+        marca:
+          $ref: "./openapi.yaml#/components/schemas/Marca"
