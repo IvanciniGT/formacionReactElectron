@@ -350,6 +350,15 @@ Monto mi backend C#
     - Flujo de trabajo!
     Todo eso va junto
 
+## El desarrollo de pruebas también tiene sus PRINCIPIOS (como llos principios SOLID en desarrollo): FIRST
+
+FIRST:
+- Fast: Las pruebas deben ejecutarse rápidamente.
+- Independent: Las pruebas deben ser independientes entre sí.
+- Repeatable: Las pruebas deben ser repetibles en cualquier entorno.
+- Self-Validating: Las pruebas deben ser auto-validantes, es decir, deben poder determinar por sí mismas si han pasado o fallado.
+- Timely: OPORTUNAS: HACERSE EN EL MOMENTO ADECUADO!. Las pruebas deben ser escritas a tiempo, idealmente antes de que el código que prueban sea escrito (TDD).
+
 ---
 
 # GIT

@@ -77,16 +77,21 @@ operations:
       abierto en el detalle. Si se suscribe otra vez al mismo evento, la nueva suscripción
       sustituye a la anterior (por ejemplo, para cambiar los mercados al abrir otro grupo).
 
-      La invocación falla (`HubException`) si el evento no existe o no es visible, o si la
-      conexión ya tiene 50 suscripciones. SignalR solo transmite un texto de error, así que
-      el mensaje **empieza por un código** que el frontal puede reconocer:
+      La invocación falla (`HubException`) si el evento no existe o no es visible, si la
+      conexión ya tiene 50 suscripciones o si la suscripción no cumple su esquema (más de
+      100 mercados). SignalR solo transmite un texto de error, así que el mensaje **empieza
+      por un código**, de los de `CodigoProblema` de `openapi.yaml`: **los mismos que en
+      REST**, para que el frontal los trate igual vengan de donde vengan.
 
       | Código | Cuándo |
       |---|---|
       | `EventoNoEncontrado` | El evento no existe o ya no se ve |
       | `DemasiadasSuscripciones` | La conexión ya sigue 50 eventos |
+      | `ParametroNoValido` | La suscripción no cumple su esquema |
 
-      Por ejemplo: `EventoNoEncontrado: no hay ningún evento visible con id …`.
+      Por ejemplo: `EventoNoEncontrado: no hay ningún evento visible con id …`. El cliente
+      de SignalR puede anteponerle su propio texto (`… HubException: EventoNoEncontrado: …`):
+      el código se busca dentro del mensaje, no solo al principio.
     messages:
       - $ref: "#/channels/catalogo/messages/suscribir"
 
@@ -172,7 +177,7 @@ components:
             cuotas:
               - seleccionId: 9b1e4c7a-2f3d-4a8e-b5c6-0d9f8e7a6b51
                 mercadoId: 5c9e2a7b-1d3f-4e8a-b6c4-9f0d2e8a1b31
-                cuota: 2.00
+                cuota: 2.05
                 tendencia: baja
             mercados:
               - mercadoId: 5c9e2a7b-1d3f-4e8a-b6c4-9f0d2e8a1b32

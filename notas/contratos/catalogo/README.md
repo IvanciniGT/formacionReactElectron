@@ -61,14 +61,35 @@ representa exacto, y cuando el jugador apueste devolverá la cuota que vio para 
 dominio la compare con la vigente. El generador de C# tiene que producir `decimal`.
 
 **Los errores siguen el RFC 9457** (`application/problem+json`), que es lo que ASP.NET
-produce de serie.
+produce de serie, con dos campos más: el **`codigo`** del error y lo que lo explica
+(`parametro`, `eventoId`). El `type` es `urn:apuestas-deportivas:problema:` y el código.
+
+**Los códigos son los mismos en REST y en el hub** (`CodigoProblema`, en `openapi.yaml`): en
+REST van en `codigo`; en el hub, al principio del texto del error, que es lo único que
+transmite SignalR. Así el frontal trata igual un error venga de donde venga.
+
+| Código | Cuándo | REST | Hub |
+|---|---|---|---|
+| `ParametroNoValido` | Un parámetro no cumple el contrato | `400`, con `parametro` | Al suscribirse |
+| `EventoNoEncontrado` | El evento no existe o ya no se ve | `404`, con `eventoId` | Al suscribirse |
+| `MarcaCaducada` | La marca ya no permite calcular los cambios | `410` | No: manda `Recargar` |
+| `DemasiadasSuscripciones` | La conexión ya sigue 50 eventos | No | Al suscribirse |
+
+**Un 4xx sin `codigo` no es del catálogo**: es de un proxy, o la URL no es la del backend.
+El frontal no lo confunde con uno suyo (un 404 así no es un evento que no existe). Un
+código nuevo es un cambio MINOR: quien no lo conozca lo trata como un fallo del servicio.
 
 **Es público.** El catálogo se puede ver sin haber iniciado sesión.
 
 ## Validaciones
 
 Cada campo lleva las restricciones que JSON Schema sabe expresar, para que los
-generadores y los validadores de peticiones las apliquen sin más. Las que salen de una
+generadores y los validadores de peticiones las apliquen sin más.
+
+**Salvo los decimales de las cuotas**, que van en `x-decimales` y no en `multipleOf`. Con
+`multipleOf: 0.01`, un validador que divide en coma flotante rechaza cuotas válidas:
+2.05 / 0.01 da 204.99999999999997, no un entero. Entre 1.01 y 10.00, rechazaba 149 de las
+900. La comprobación exacta la hace la invariante `[Cuota]` del dominio, en `decimal`. Las que salen de una
 invariante del dominio llevan `x-invariante` con el nombre de la anotación y el componente
 donde se define.
 
@@ -87,7 +108,7 @@ donde se define.
 | `Evento.estado` | `programado`, `enJuego`, `interrumpido` (y en tiempo real, además, `finalizado`, `aplazado`, `cancelado`) | `[Estado<T>]` · Comun.Invariantes |
 | `Mercado.descripcion`, `Seleccion.descripcion` | 3 a 500 caracteres | `[Descripcion]` · Apuestas.Invariantes |
 | `Mercado.estado` | `abierto`, `suspendido` | `[Estado<T>]` · Comun.Invariantes |
-| `cuota`, `cuotaInicial` | Mayor que 1, múltiplo de 0,01, sin máximo | `[Cuota]` · Apuestas.Invariantes |
+| `cuota`, `cuotaInicial` | Mayor que 1, 2 decimales como mucho (`x-decimales: 2`), sin máximo | `[Cuota]` · Apuestas.Invariantes |
 | `Mercado.tipo` | 1 a 50 caracteres | Ninguna todavía |
 | `GrupoMercados.clave` | Minúsculas, dígitos y guiones; hasta 50 | Ninguna: es del contrato |
 | Paginación | `pagina` ≥ 1; `tamano` de 1 a 100 | Ninguna: es del contrato |

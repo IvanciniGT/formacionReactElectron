@@ -248,7 +248,7 @@ paths:
                             tendencia: baja
                           - id: 9b1e4c7a-2f3d-4a8e-b5c6-0d9f8e7a6b62
                             descripcion: Menos de 2,5
-                            cuota: 2.00
+                            cuota: 2.05
                             cuotaInicial: 1.95
                             tendencia: sube
         "400":
@@ -305,7 +305,7 @@ paths:
                     cuotas:
                       - seleccionId: 9b1e4c7a-2f3d-4a8e-b5c6-0d9f8e7a6b51
                         mercadoId: 5c9e2a7b-1d3f-4e8a-b6c4-9f0d2e8a1b31
-                        cuota: 2.00
+                        cuota: 2.05
                         tendencia: baja
                     mercados:
                       - mercadoId: 5c9e2a7b-1d3f-4e8a-b6c4-9f0d2e8a1b32
@@ -332,7 +332,8 @@ paths:
                 marcaAntigua:
                   summary: La marca ya no se puede usar
                   value:
-                    type: about:blank
+                    type: urn:apuestas-deportivas:problema:MarcaCaducada
+                    codigo: MarcaCaducada
                     title: Marca demasiado antigua
                     status: 410
                     detail: Hay que volver a pedir sin desde.
@@ -373,10 +374,12 @@ components:
             tamano:
               summary: Un tamaño de página fuera de rango
               value:
-                type: about:blank
+                type: urn:apuestas-deportivas:problema:ParametroNoValido
+                codigo: ParametroNoValido
                 title: Petición incorrecta
                 status: 400
-                detail: tamano tiene que estar entre 1 y 100.
+                detail: tamano tiene que ser un entero entre 1 y 100.
+                parametro: tamano
     EventoNoEncontrado:
       description: No hay ningún evento visible con ese id.
       content:
@@ -387,10 +390,12 @@ components:
             noEncontrado:
               summary: Un evento que no existe o ya no se ve
               value:
-                type: about:blank
+                type: urn:apuestas-deportivas:problema:EventoNoEncontrado
+                codigo: EventoNoEncontrado
                 title: Evento no encontrado
                 status: 404
                 detail: No hay ningún evento visible con id 3f2b8c1d-9e4a-4b7c-8d2e-1a5f6c9b0e21.
+                eventoId: 3f2b8c1d-9e4a-4b7c-8d2e-1a5f6c9b0e21
 
   schemas:
     Id:
@@ -409,7 +414,10 @@ components:
       format: decimal
       description: Mayor que 1 y con 2 decimales como mucho. Una cuota de 1,00 o menos no paga nada. Sin máximo.
       exclusiveMinimum: 1
-      multipleOf: 0.01
+      # Los 2 decimales van en x-decimales y no en multipleOf: en coma flotante, 2.05 / 0.01
+      # no da un entero, y los validadores de JavaScript rechazarían 1 de cada 6 cuotas
+      # válidas (1.11, 2.01, 2.05…). La comprobación exacta la hace el dominio, en decimal.
+      x-decimales: 2
       examples: [2.10]
       x-invariante: Cuota (Apuestas.Invariantes)
 
@@ -639,14 +647,35 @@ components:
           items:
             $ref: "#/components/schemas/CambioDeMercado"
 
-    # RFC 9457, el formato de error de HTTP. Es lo que ASP.NET produce de serie.
+    # Los errores del catálogo, los mismos en REST (Problema.codigo) y en el hub de
+    # asyncapi.yaml (el principio del texto del error). Uno nuevo es un cambio MINOR del
+    # contrato, y quien lo consuma tiene que tratar uno que no conozca como un fallo del
+    # servicio.
+    CodigoProblema:
+      type: string
+      enum: [ParametroNoValido, EventoNoEncontrado, MarcaCaducada, DemasiadasSuscripciones]
+      description: |
+        | Código | Cuándo | REST | Hub |
+        |---|---|---|---|
+        | `ParametroNoValido` | Un parámetro no cumple el contrato. Reintentar lo mismo no sirve | `400`, con `parametro` | Al suscribirse |
+        | `EventoNoEncontrado` | El evento no existe o ya no se ve | `404`, con `eventoId` | Al suscribirse |
+        | `MarcaCaducada` | La marca es tan antigua que ya no se pueden calcular los cambios | `410` | No: el hub manda `Recargar` |
+        | `DemasiadasSuscripciones` | La conexión ya sigue 50 eventos | No | Al suscribirse |
+
+    # RFC 9457, el formato de error de HTTP: lo que ASP.NET produce de serie, más dos campos
+    # nuestros (codigo y lo que lo explica). Un 4xx sin codigo no es del catálogo (un proxy,
+    # una URL equivocada), y el frontal no debe confundirlo con uno suyo.
     Problema:
       type: object
-      required: [title, status]
+      required: [type, title, status, codigo]
       properties:
         type:
           type: string
           format: uri-reference
+          description: "`urn:apuestas-deportivas:problema:` seguido del código."
+          examples: ["urn:apuestas-deportivas:problema:EventoNoEncontrado"]
+        codigo:
+          $ref: "#/components/schemas/CodigoProblema"
         title:
           type: string
         status:
@@ -656,3 +685,10 @@ components:
         instance:
           type: string
           format: uri-reference
+        parametro:
+          type: string
+          description: Solo en `ParametroNoValido`, el parámetro que no vale.
+          examples: [tamano]
+        eventoId:
+          $ref: "#/components/schemas/Id"
+          description: Solo en `EventoNoEncontrado`, el evento que no se encuentra.

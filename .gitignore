@@ -8,4 +8,3 @@ coverage/
 *.log
 
 # El proyecto del curso vive en su propio GitLab, con un repo por componente.
-proyecto/
