@@ -1,0 +1,99 @@
+<Project>
+
+  <!--
+    Todo lo generado (bin, obj, paquetes, cobertura, informes) va a artifacts/, en la raíz
+    del componente, y no al lado del código. Es la opción oficial de .NET desde la 8.
+  -->
+  <PropertyGroup>
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+  </PropertyGroup>
+
+  <!--
+    Las dependencias entre componentes propios se declaran dos veces en cada .csproj:
+    como proyecto, para trabajar en local con todo clonado desde el repo padre, y como
+    paquete con versión fija, que es lo que usa el CI y quien clone el repo suelto.
+    GitLab define CI=true en todos los jobs. Para reproducir el CI en local:
+      dotnet test -p:UsarFuentesLocales=false
+  -->
+  <PropertyGroup>
+    <UsarFuentesLocales Condition="'$(UsarFuentesLocales)' == '' And '$(CI)' != 'true'">true</UsarFuentesLocales>
+    <!-- La carpeta backend/ del repo padre: cada componente está dos niveles por debajo. -->
+    <RaizBackend>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../'))</RaizBackend>
+  </PropertyGroup>
+
+  <!--
+    La versión la calcula el pipeline (.gitlab/version.sh) y la pasa con -p:Version. El
+    VersionPrefix de cada .csproj solo cuenta para la primera publicación, cuando aún no hay
+    ninguna versión aprobada de la que partir.
+
+    Un paquete estable que depende de una pre-release no se publica: lo impide dotnet pack.
+  -->
+  <PropertyGroup>
+    <WarningsAsErrors>$(WarningsAsErrors);NU5104</WarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- Las notas del paquete: lo que trae esta publicación según CHANGELOG.md (las deja .gitlab/publicar.sh). -->
+  <PropertyGroup Condition="Exists('$(MSBuildThisFileDirectory)artifacts/notas-version.md')">
+    <PackageReleaseNotes>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)artifacts/notas-version.md'))</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <!--
+    Cobertura automática en cada `dotnet test`, como JaCoCo en Maven: coverlet instrumenta
+    (jacoco:prepare-agent), ReportGenerator hace el informe HTML (jacoco:report) y el umbral
+    rompe el build (jacoco:check).
+
+    Se aplica por convención a los proyectos de pruebas, por su nombre:
+      X.Pruebas              unitarias      se mide y se exige el umbral
+      X.Pruebas.Integracion  integración    se mide
+      X.Pruebas.Sistema      sistema        se mide
+    El umbral solo a las unitarias: son las que prueban cada pieza por separado, y una
+    prueba de sistema que recorre medio componente no debe tapar que falten.
+
+    Cada componente se mide y se exige por separado: se libera por su cuenta, y un total
+    agregado dejaría que uno bien probado tapase a otro sin pruebas.
+  -->
+  <PropertyGroup Condition="$(MSBuildProjectName.Contains('.Pruebas'))">
+    <ComponenteProbado>$(MSBuildProjectName.Substring(0, $(MSBuildProjectName.IndexOf('.Pruebas'))))</ComponenteProbado>
+    <CarpetaCobertura>$(MSBuildThisFileDirectory)artifacts/cobertura/$(MSBuildProjectName)/</CarpetaCobertura>
+
+    <CollectCoverage>true</CollectCoverage>
+    <!-- cobertura para GitLab, opencover para SonarQube. -->
+    <CoverletOutputFormat>cobertura,opencover</CoverletOutputFormat>
+    <CoverletOutput>$(CarpetaCobertura)</CoverletOutput>
+
+    <!--
+      Solo se mide el componente que se prueba: X.Pruebas mide X. Sin esto coverlet mide
+      también las dependencias, y a Invariantes le contaría como "sin cubrir" el código de
+      Comun.Validacion, que tiene sus propias pruebas.
+    -->
+    <Include>[$(ComponenteProbado)]*</Include>
+  </PropertyGroup>
+
+  <!--
+    Porcentaje mínimo de líneas y de ramas. No se usa el Threshold de coverlet porque corta
+    el build antes de generar el informe, y es justo cuando falla cuando hace falta ver qué
+    queda sin cubrir.
+  -->
+  <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('.Pruebas'))">
+    <UmbralCobertura>90</UmbralCobertura>
+  </PropertyGroup>
+
+  <!--
+    Tienen que estar aquí y no en un paquete compartido: NuGet necesita conocer todos los
+    paquetes antes de restaurar, y lo que trae un paquete solo se carga después.
+  -->
+  <ItemGroup Condition="$(MSBuildProjectName.Contains('.Pruebas'))">
+    <PackageReference Include="coverlet.msbuild" Version="10.1.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="ReportGenerator" Version="5.5.11">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <!-- Para que GitLab muestre el resultado de cada prueba en el pipeline. -->
+    <PackageReference Include="JunitXml.TestLogger" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

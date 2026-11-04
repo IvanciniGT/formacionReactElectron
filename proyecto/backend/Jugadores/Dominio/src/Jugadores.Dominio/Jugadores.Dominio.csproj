@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- VersionPrefix solo vale para la primera publicación, cuando aún no hay ninguna
+       versión aprobada: a partir de ahí la calcula el pipeline desde CHANGELOG.md. -->
+  <PropertyGroup>
+    <PackageId>Jugadores.Dominio</PackageId>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <Authors>Iván Osuna Ayuste</Authors>
+    <Description>Modelos del dominio de jugadores.</Description>
+  </PropertyGroup>
+
+  <!--
+    Jugadores.Invariantes se consume por versión. Esa versión aún no está publicada: en modo CI no restaura hasta que lo esté. En local, con el repo padre clonado, se usa su código directamente
+    (ver UsarFuentesLocales en Directory.Build.props); en el CI, siempre el paquete.
+    Entre corchetes: esa versión exacta, no «esa o superior».
+  -->
+  <PropertyGroup>
+    <FuenteInvariantes>$(RaizBackend)Jugadores/Invariantes/src/Jugadores.Invariantes/Jugadores.Invariantes.csproj</FuenteInvariantes>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UsarFuentesLocales)' == 'true' And Exists('$(FuenteInvariantes)')">
+    <ProjectReference Include="$(FuenteInvariantes)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UsarFuentesLocales)' != 'true' Or !Exists('$(FuenteInvariantes)')">
+    <PackageReference Include="Jugadores.Invariantes" Version="[0.1.0-desa.1]" />
+  </ItemGroup>
+
+  <!-- Nombre, email, DNI, identificador, estado y fecha. Aún sin publicar. -->
+  <PropertyGroup>
+    <FuenteComunInvariantes>$(RaizBackend)Comun/Invariantes/src/Comun.Invariantes/Comun.Invariantes.csproj</FuenteComunInvariantes>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UsarFuentesLocales)' == 'true' And Exists('$(FuenteComunInvariantes)')">
+    <ProjectReference Include="$(FuenteComunInvariantes)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UsarFuentesLocales)' != 'true' Or !Exists('$(FuenteComunInvariantes)')">
+    <PackageReference Include="Comun.Invariantes" Version="[0.1.0-desa.1]" />
+  </ItemGroup>
+
+  <!-- IValidador: el dominio lo recibe como parámetro, nunca por inyección. -->
+  <PropertyGroup>
+    <FuenteComunValidacion>$(RaizBackend)Comun/Validacion/src/Comun.Validacion/Comun.Validacion.csproj</FuenteComunValidacion>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UsarFuentesLocales)' == 'true' And Exists('$(FuenteComunValidacion)')">
+    <ProjectReference Include="$(FuenteComunValidacion)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UsarFuentesLocales)' != 'true' Or !Exists('$(FuenteComunValidacion)')">
+    <PackageReference Include="Comun.Validacion" Version="[1.0.0-desa.1]" />
+  </ItemGroup>
+
+</Project>

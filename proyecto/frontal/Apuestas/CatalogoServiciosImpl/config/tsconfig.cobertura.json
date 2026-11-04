@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "..",
+    "outDir": "../artifacts/compilado",
+    "declaration": false,
+    "sourceMap": true
+  },
+  "include": ["../src", "../tests/unitarias"]
+}

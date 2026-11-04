@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- VersionPrefix solo vale para la primera publicación, cuando aún no hay ninguna
+       versión aprobada: a partir de ahí la calcula el pipeline desde CHANGELOG.md. -->
+  <PropertyGroup>
+    <PackageId>Jugadores.Invariantes</PackageId>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <Authors>Iván Osuna Ayuste</Authors>
+    <Description>Anotaciones de validación de los campos del dominio de jugadores.</Description>
+  </PropertyGroup>
+
+  <!--
+    Comun.Validacion vive en otro repo y se consume por versión. En local, con el repo padre clonado, se usa su código directamente
+    (ver UsarFuentesLocales en Directory.Build.props); en el CI, siempre el paquete.
+    Entre corchetes: esa versión exacta, no «esa o superior».
+  -->
+  <PropertyGroup>
+    <FuenteComunValidacion>$(RaizBackend)Comun/Validacion/src/Comun.Validacion/Comun.Validacion.csproj</FuenteComunValidacion>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UsarFuentesLocales)' == 'true' And Exists('$(FuenteComunValidacion)')">
+    <ProjectReference Include="$(FuenteComunValidacion)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UsarFuentesLocales)' != 'true' Or !Exists('$(FuenteComunValidacion)')">
+    <PackageReference Include="Comun.Validacion" Version="[1.0.0-desa.1]" />
+  </ItemGroup>
+
+</Project>

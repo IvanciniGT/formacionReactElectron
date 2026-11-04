@@ -1,0 +1,4 @@
+# Restos de compilación de la solución que junta los submódulos
+bin/
+obj/
+.DS_Store

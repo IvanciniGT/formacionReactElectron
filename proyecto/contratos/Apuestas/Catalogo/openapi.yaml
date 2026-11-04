@@ -1,0 +1,694 @@
+openapi: 3.1.0
+
+info:
+  title: Catálogo de apuestas · API del jugador
+  version: 0.0.0
+  description: |
+    Lo que un jugador puede ver del catálogo: los eventos, sus mercados, sus selecciones
+    y las cuotas vigentes. **Solo lectura.** Dar de alta eventos, cambiar cuotas o
+    suspender mercados es de otro actor, el operador, y va en otro contrato.
+
+    El jugador solo ve lo que se puede apostar o está a punto de poderse: eventos
+    programados, en juego o interrumpidos, y mercados abiertos o suspendidos.
+
+    **Las cuotas cambian constantemente.** Cada respuesta trae las de ese momento y una
+    `marca`. Para mantenerlas al día, el frontal se suscribe al evento por WebSocket
+    (`asyncapi.yaml`) desde esa marca, y recibe solo los cambios. Si pierde la conexión,
+    `GET /v1/eventos/{eventoId}/cuotas?desde=` le da lo que se ha perdido.
+
+    **Un partido grande puede tener cientos de mercados y más de mil selecciones**, así
+    que nada trae el evento entero: la lista trae el mercado principal, el detalle añade
+    los grupos de mercados, y cada grupo se pide por separado.
+
+    **Validaciones.** Cada campo lleva las restricciones que JSON Schema sabe expresar
+    (longitudes, patrones, mínimos, decimales, valores permitidos), para que los
+    generadores y los validadores las apliquen sin más. Las que salen de una invariante del
+    dominio llevan además `x-invariante`, con el nombre de la anotación que la define
+    (`[NombreEvento]`, `[Cuota]`…) y el componente donde está. Si una invariante cambia, el
+    contrato tiene que cambiar con ella: es una versión nueva del contrato.
+
+# Relativo: el mismo contrato vale en local, en desarrollo y en producción, detrás de
+# cualquier dominio.
+servers:
+  - url: /
+
+# Público a propósito: el catálogo se puede ver sin haber iniciado sesión, como en
+# cualquier casa de apuestas. Apostar sí la exigirá, y va en otro contrato.
+security: []
+
+tags:
+  - name: Catálogo
+    description: Tipos, eventos, mercados y selecciones.
+  - name: Cuotas
+    description: Mantener al día las cuotas de lo que el jugador tiene en pantalla.
+
+paths:
+  /v1/tipos:
+    get:
+      tags: [Catálogo]
+      operationId: listarTipos
+      summary: Los tipos de evento, para filtrar la lista.
+      responses:
+        "200":
+          description: Todos los tipos de evento con algún evento visible.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TipoEvento"
+              examples:
+                tipos:
+                  summary: Fútbol y baloncesto
+                  value:
+                    - id: 7a3f1c2e-5b4d-4e8a-9c1f-2d6e8b0a4c11
+                      nombre: Partido de fútbol
+                    - id: 7a3f1c2e-5b4d-4e8a-9c1f-2d6e8b0a4c12
+                      nombre: Partido de baloncesto
+
+  /v1/eventos:
+    get:
+      tags: [Catálogo]
+      operationId: listarEventos
+      summary: Los eventos visibles, con su mercado principal.
+      description: |
+        Ordenados por fecha y hora de comienzo. Cada evento trae su mercado principal
+        (en un partido, el 1X2) con sus cuotas, que es lo que se enseña en un listado.
+      parameters:
+        - name: tipo
+          in: query
+          description: Solo los eventos de este tipo.
+          schema:
+            $ref: "#/components/schemas/Id"
+        - name: estado
+          in: query
+          description: Solo los eventos en este estado.
+          schema:
+            $ref: "#/components/schemas/EstadoEvento"
+        - name: desde
+          in: query
+          description: Solo los que empiezan a partir de este momento.
+          schema:
+            type: string
+            format: date-time
+        - name: hasta
+          in: query
+          description: Solo los que empiezan antes de este momento.
+          schema:
+            type: string
+            format: date-time
+        - $ref: "#/components/parameters/Pagina"
+        - $ref: "#/components/parameters/Tamano"
+      responses:
+        "200":
+          description: Una página de eventos.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginaEventos"
+              examples:
+                primeraPagina:
+                  summary: La primera página, de un solo evento, de 3 que hay
+                  value:
+                    marca: '48213'
+                    pagina: 1
+                    tamano: 1
+                    total: 3
+                    elementos:
+                      - id: 3f2b8c1d-9e4a-4b7c-8d2e-1a5f6c9b0e21
+                        nombre: Real Madrid - FC Barcelona
+                        fechaHora: '2026-11-08T20:00:00Z'
+                        tipo:
+                          id: 7a3f1c2e-5b4d-4e8a-9c1f-2d6e8b0a4c11
+                          nombre: Partido de fútbol
+                        estado: programado
+                        mercadoPrincipal:
+                          id: 5c9e2a7b-1d3f-4e8a-b6c4-9f0d2e8a1b31
+                          tipo: 1X2
+                          grupo: principales
+                          descripcion: Quién gana
+                          estado: abierto
+                          selecciones:
+                            - id: 9b1e4c7a-2f3d-4a8e-b5c6-0d9f8e7a6b51
+                              descripcion: Gana el Madrid
+                              cuota: 2.10
+                              cuotaInicial: 2.25
+                              tendencia: baja
+                            - id: 9b1e4c7a-2f3d-4a8e-b5c6-0d9f8e7a6b52
+                              descripcion: Empate
+                              cuota: 3.40
+                              cuotaInicial: 3.40
+                              tendencia: igual
+                            - id: 9b1e4c7a-2f3d-4a8e-b5c6-0d9f8e7a6b53
+                              descripcion: Gana el Barcelona
+                              cuota: 3.20
+                              cuotaInicial: 3.00
+                              tendencia: sube
+        "400":
+          $ref: "#/components/responses/PeticionIncorrecta"
+
+  /v1/eventos/{eventoId}:
+    get:
+      tags: [Catálogo]
+      operationId: obtenerEvento
+      summary: Un evento, con su mercado principal y sus grupos de mercados.
+      description: |
+        Lo necesario para pintar la primera pantalla del evento: sus datos, el mercado
+        principal con sus cuotas y los grupos de mercados que tiene (las pestañas), con
+        cuántos mercados hay en cada uno. Los mercados de cada grupo se piden aparte.
+      parameters:
+        - $ref: "#/components/parameters/EventoId"
+      responses:
+        "200":
+          description: El evento.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventoDetalle"
+              examples:
+                clasico:
+                  summary: El evento, con sus dos grupos de mercados
+                  value:
+                    id: 3f2b8c1d-9e4a-4b7c-8d2e-1a5f6c9b0e21
+                    nombre: Real Madrid - FC Barcelona
+                    fechaHora: '2026-11-08T20:00:00Z'
+                    tipo:
+                      id: 7a3f1c2e-5b4d-4e8a-9c1f-2d6e8b0a4c11
+                      nombre: Partido de fútbol
+                    estado: programado
+                    mercadoPrincipal:
+                      id: 5c9e2a7b-1d3f-4e8a-b6c4-9f0d2e8a1b31
+                      tipo: 1X2
+                      grupo: principales
+                      descripcion: Quién gana
+                      estado: abierto
+                      selecciones:
+                        - id: 9b1e4c7a-2f3d-4a8e-b5c6-0d9f8e7a6b51
+                          descripcion: Gana el Madrid
+                          cuota: 2.10
+                          cuotaInicial: 2.25
+                          tendencia: baja
+                        - id: 9b1e4c7a-2f3d-4a8e-b5c6-0d9f8e7a6b52
+                          descripcion: Empate
+                          cuota: 3.40
+                          cuotaInicial: 3.40
+                          tendencia: igual
+                        - id: 9b1e4c7a-2f3d-4a8e-b5c6-0d9f8e7a6b53
+                          descripcion: Gana el Barcelona
+                          cuota: 3.20
+                          cuotaInicial: 3.00
+                          tendencia: sube
+                    marca: '48213'
+                    grupos:
+                      - clave: principales
+                        nombre: Principales
+                        numeroMercados: 1
+                      - clave: goles
+                        nombre: Goles
+                        numeroMercados: 1
+        "404":
+          $ref: "#/components/responses/EventoNoEncontrado"
+
+  /v1/eventos/{eventoId}/mercados:
+    get:
+      tags: [Catálogo]
+      operationId: listarMercados
+      summary: Los mercados de un grupo del evento, con sus selecciones y cuotas.
+      parameters:
+        - $ref: "#/components/parameters/EventoId"
+        - name: grupo
+          in: query
+          required: true
+          description: La clave del grupo, tal como viene en el detalle del evento.
+          schema:
+            $ref: "#/components/schemas/ClaveGrupo"
+      responses:
+        "200":
+          description: Los mercados visibles de ese grupo, en el orden en que se enseñan.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MercadosDeGrupo"
+              examples:
+                goles:
+                  summary: 'El grupo «goles»: un mercado, suspendido'
+                  value:
+                    marca: '48215'
+                    mercados:
+                      - id: 5c9e2a7b-1d3f-4e8a-b6c4-9f0d2e8a1b32
+                        tipo: masMenos
+                        grupo: goles
+                        descripcion: Más/menos de 2,5 goles
+                        estado: suspendido
+                        selecciones:
+                          - id: 9b1e4c7a-2f3d-4a8e-b5c6-0d9f8e7a6b61
+                            descripcion: Más de 2,5
+                            cuota: 1.80
+                            cuotaInicial: 1.85
+                            tendencia: baja
+                          - id: 9b1e4c7a-2f3d-4a8e-b5c6-0d9f8e7a6b62
+                            descripcion: Menos de 2,5
+                            cuota: 2.05
+                            cuotaInicial: 1.95
+                            tendencia: sube
+        "400":
+          $ref: "#/components/responses/PeticionIncorrecta"
+        "404":
+          $ref: "#/components/responses/EventoNoEncontrado"
+
+  /v1/eventos/{eventoId}/cuotas:
+    get:
+      tags: [Cuotas]
+      operationId: obtenerCambiosDeCuotas
+      summary: Lo que ha cambiado en las cuotas y en los mercados desde una marca.
+      description: |
+        Lo normal es recibir los cambios por WebSocket (`asyncapi.yaml`). Esto sirve para
+        recuperar lo perdido al reconectar, y para quien no pueda usar WebSocket.
+
+        - Sin `desde`, devuelve el estado actual de todo lo pedido, y una `marca`.
+        - Con `desde`, solo lo que ha cambiado después de esa marca, y la marca nueva para
+          la siguiente consulta.
+
+        Si la marca es demasiado antigua y ya no se pueden calcular los cambios, responde
+        `410`, y el frontal tiene que volver a pedir sin `desde`.
+
+        Es el mismo formato que el mensaje `Cambios` del WebSocket.
+      parameters:
+        - $ref: "#/components/parameters/EventoId"
+        - name: mercados
+          in: query
+          description: Solo estos mercados (los que el jugador tiene en pantalla). Sin él, todos los visibles.
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/Id"
+            maxItems: 100
+        - name: desde
+          in: query
+          description: La `marca` de la respuesta anterior.
+          schema:
+            $ref: "#/components/schemas/Marca"
+      responses:
+        "200":
+          description: Los cambios.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CambiosDeCuotas"
+              examples:
+                desdeUnaMarca:
+                  summary: 'Desde la marca 48213: una cuota ha bajado y un mercado se ha suspendido'
+                  value:
+                    marca: '48216'
+                    cuotas:
+                      - seleccionId: 9b1e4c7a-2f3d-4a8e-b5c6-0d9f8e7a6b51
+                        mercadoId: 5c9e2a7b-1d3f-4e8a-b6c4-9f0d2e8a1b31
+                        cuota: 2.05
+                        tendencia: baja
+                    mercados:
+                      - mercadoId: 5c9e2a7b-1d3f-4e8a-b6c4-9f0d2e8a1b32
+                        estado: suspendido
+                mercadoCerrado:
+                  summary: 'Un mercado se ha cerrado: estado null, hay que quitarlo de la pantalla'
+                  value:
+                    marca: '48220'
+                    cuotas: []
+                    mercados:
+                      - mercadoId: 5c9e2a7b-1d3f-4e8a-b6c4-9f0d2e8a1b32
+                        estado: null
+        "400":
+          $ref: "#/components/responses/PeticionIncorrecta"
+        "404":
+          $ref: "#/components/responses/EventoNoEncontrado"
+        "410":
+          description: La marca es demasiado antigua. Hay que volver a pedir sin `desde`.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problema"
+              examples:
+                marcaAntigua:
+                  summary: La marca ya no se puede usar
+                  value:
+                    type: urn:apuestas-deportivas:problema:MarcaCaducada
+                    codigo: MarcaCaducada
+                    title: Marca demasiado antigua
+                    status: 410
+                    detail: Hay que volver a pedir sin desde.
+
+components:
+  parameters:
+    EventoId:
+      name: eventoId
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/Id"
+    Pagina:
+      name: pagina
+      in: query
+      description: Empieza en 1.
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Tamano:
+      name: tamano
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  responses:
+    PeticionIncorrecta:
+      description: Algún parámetro no es válido.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problema"
+          examples:
+            tamano:
+              summary: Un tamaño de página fuera de rango
+              value:
+                type: urn:apuestas-deportivas:problema:ParametroNoValido
+                codigo: ParametroNoValido
+                title: Petición incorrecta
+                status: 400
+                detail: tamano tiene que ser un entero entre 1 y 100.
+                parametro: tamano
+    EventoNoEncontrado:
+      description: No hay ningún evento visible con ese id.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problema"
+          examples:
+            noEncontrado:
+              summary: Un evento que no existe o ya no se ve
+              value:
+                type: urn:apuestas-deportivas:problema:EventoNoEncontrado
+                codigo: EventoNoEncontrado
+                title: Evento no encontrado
+                status: 404
+                detail: No hay ningún evento visible con id 3f2b8c1d-9e4a-4b7c-8d2e-1a5f6c9b0e21.
+                eventoId: 3f2b8c1d-9e4a-4b7c-8d2e-1a5f6c9b0e21
+
+  schemas:
+    Id:
+      type: string
+      format: uuid
+      description: Un Guid distinto del vacío. Los ids numéricos de la base de datos no salen del repositorio.
+      not:
+        const: 00000000-0000-0000-0000-000000000000
+      x-invariante: Identificador (Comun.Invariantes)
+
+    # Decimal y no double: en double 2,10 no se representa exacto. Cuando el jugador
+    # apueste, devolverá la cuota que vio y el dominio la comparará con la vigente.
+    # El generador de C# tiene que producir decimal (format: decimal).
+    Cuota:
+      type: number
+      format: decimal
+      description: Mayor que 1 y con 2 decimales como mucho. Una cuota de 1,00 o menos no paga nada. Sin máximo.
+      exclusiveMinimum: 1
+      # Los 2 decimales van en x-decimales y no en multipleOf: en coma flotante, 2.05 / 0.01
+      # no da un entero, y los validadores de JavaScript rechazarían 1 de cada 6 cuotas
+      # válidas (1.11, 2.01, 2.05…). La comprobación exacta la hace el dominio, en decimal.
+      x-decimales: 2
+      examples: [2.10]
+      x-invariante: Cuota (Apuestas.Invariantes)
+
+    Tendencia:
+      type: string
+      description: Hacia dónde se movió la cuota en su último cambio.
+      enum: [sube, baja, igual]
+
+    # Solo los estados que puede ver un jugador. Aplazado, cancelado o finalizado no se
+    # enseñan en el catálogo.
+    EstadoEvento:
+      type: string
+      enum: [programado, enJuego, interrumpido]
+      x-invariante: Estado<EstadoEvento> (Comun.Invariantes)
+
+    # Un mercado suspendido se ve, pero no se puede apostar en él.
+    EstadoMercado:
+      type: string
+      enum: [abierto, suspendido]
+      x-invariante: Estado<EstadoMercado> (Comun.Invariantes)
+
+    ClaveGrupo:
+      type: string
+      description: Identifica un grupo de mercados (principales, goles, handicap, goleadores…).
+      pattern: "^[a-z][a-z0-9-]*$"
+      maxLength: 50
+      examples: [goles]
+
+    # Una para todo el catálogo, que solo avanza: así vale igual para una página de
+    # eventos que para un evento solo, y una suscripción puede empezar justo donde acabó
+    # la respuesta REST, sin perder ningún cambio entre una cosa y otra.
+    Marca:
+      type: string
+      description: Opaca. El frontal la guarda y la devuelve tal cual; no tiene que entenderla.
+      minLength: 1
+      maxLength: 100
+
+    TipoEvento:
+      type: object
+      required: [id, nombre]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        nombre:
+          type: string
+          minLength: 2
+          maxLength: 50
+          examples: [Partido de fútbol]
+          x-invariante: NombreTipo (Apuestas.Invariantes)
+
+    Seleccion:
+      type: object
+      required: [id, descripcion, cuota, cuotaInicial, tendencia]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        descripcion:
+          type: string
+          minLength: 3
+          maxLength: 500
+          examples: [Gana el Madrid]
+          x-invariante: Descripcion (Apuestas.Invariantes)
+        cuota:
+          $ref: "#/components/schemas/Cuota"
+          description: La vigente. Es la que se acepta si se apuesta ahora.
+        cuotaInicial:
+          $ref: "#/components/schemas/Cuota"
+          description: La de apertura del mercado. No cambia nunca.
+        tendencia:
+          $ref: "#/components/schemas/Tendencia"
+
+    Mercado:
+      type: object
+      required: [id, tipo, grupo, descripcion, estado, selecciones]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        tipo:
+          type: string
+          description: El tipo de mercado, que define sus selecciones. Todavía no tiene invariante en el dominio.
+          minLength: 1
+          maxLength: 50
+          examples: ["1X2"]
+        grupo:
+          $ref: "#/components/schemas/ClaveGrupo"
+        descripcion:
+          type: string
+          minLength: 3
+          maxLength: 500
+          examples: [Quién gana]
+          x-invariante: Descripcion (Apuestas.Invariantes)
+        estado:
+          $ref: "#/components/schemas/EstadoMercado"
+        selecciones:
+          type: array
+          items:
+            $ref: "#/components/schemas/Seleccion"
+
+    GrupoMercados:
+      type: object
+      required: [clave, nombre, numeroMercados]
+      properties:
+        clave:
+          $ref: "#/components/schemas/ClaveGrupo"
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 50
+          examples: [Goles]
+        numeroMercados:
+          type: integer
+          minimum: 1
+
+    EventoResumen:
+      type: object
+      required: [id, nombre, fechaHora, tipo, estado]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        nombre:
+          type: string
+          minLength: 3
+          maxLength: 100
+          examples: [Real Madrid - FC Barcelona]
+          x-invariante: NombreEvento (Apuestas.Invariantes)
+        fechaHora:
+          type: string
+          format: date-time
+          description: Comienzo, en UTC.
+          x-invariante: FechaHora (Comun.Invariantes)
+        tipo:
+          $ref: "#/components/schemas/TipoEvento"
+        estado:
+          $ref: "#/components/schemas/EstadoEvento"
+        mercadoPrincipal:
+          description: El mercado que se enseña en un listado (en un partido, el 1X2). Puede no haberlo todavía.
+          oneOf:
+            - $ref: "#/components/schemas/Mercado"
+            - type: "null"
+
+    EventoDetalle:
+      description: El resumen del evento más sus grupos de mercados, en el orden en que se enseñan.
+      allOf:
+        - $ref: "#/components/schemas/EventoResumen"
+        - type: object
+          required: [grupos, marca]
+          properties:
+            grupos:
+              type: array
+              items:
+                $ref: "#/components/schemas/GrupoMercados"
+            marca:
+              $ref: "#/components/schemas/Marca"
+              description: Para suscribirse a los cambios desde justo este momento.
+
+    MercadosDeGrupo:
+      type: object
+      required: [marca, mercados]
+      properties:
+        marca:
+          $ref: "#/components/schemas/Marca"
+          description: Para suscribirse a los cambios desde justo este momento.
+        mercados:
+          type: array
+          items:
+            $ref: "#/components/schemas/Mercado"
+
+    PaginaEventos:
+      type: object
+      required: [elementos, pagina, tamano, total, marca]
+      properties:
+        marca:
+          $ref: "#/components/schemas/Marca"
+          description: Para suscribirse a los cambios de estos eventos desde justo este momento.
+        elementos:
+          type: array
+          items:
+            $ref: "#/components/schemas/EventoResumen"
+        pagina:
+          type: integer
+          minimum: 1
+        tamano:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0
+          description: Cuántos eventos hay en total con esos filtros.
+
+    CambioDeCuota:
+      type: object
+      required: [seleccionId, mercadoId, cuota, tendencia]
+      properties:
+        seleccionId:
+          $ref: "#/components/schemas/Id"
+        mercadoId:
+          $ref: "#/components/schemas/Id"
+        cuota:
+          $ref: "#/components/schemas/Cuota"
+        tendencia:
+          $ref: "#/components/schemas/Tendencia"
+
+    CambioDeMercado:
+      type: object
+      required: [mercadoId, estado]
+      properties:
+        mercadoId:
+          $ref: "#/components/schemas/Id"
+        estado:
+          description: El estado nuevo. Si es null, el mercado ya no es visible (se ha cerrado o anulado) y hay que quitarlo de la pantalla.
+          oneOf:
+            - $ref: "#/components/schemas/EstadoMercado"
+            - type: "null"
+
+    CambiosDeCuotas:
+      type: object
+      required: [marca, cuotas, mercados]
+      properties:
+        marca:
+          $ref: "#/components/schemas/Marca"
+        cuotas:
+          type: array
+          items:
+            $ref: "#/components/schemas/CambioDeCuota"
+        mercados:
+          type: array
+          items:
+            $ref: "#/components/schemas/CambioDeMercado"
+
+    # Los errores del catálogo, los mismos en REST (Problema.codigo) y en el hub de
+    # asyncapi.yaml (el principio del texto del error). Uno nuevo es un cambio MINOR del
+    # contrato, y quien lo consuma tiene que tratar uno que no conozca como un fallo del
+    # servicio.
+    CodigoProblema:
+      type: string
+      enum: [ParametroNoValido, EventoNoEncontrado, MarcaCaducada, DemasiadasSuscripciones]
+      description: |
+        | Código | Cuándo | REST | Hub |
+        |---|---|---|---|
+        | `ParametroNoValido` | Un parámetro no cumple el contrato. Reintentar lo mismo no sirve | `400`, con `parametro` | Al suscribirse |
+        | `EventoNoEncontrado` | El evento no existe o ya no se ve | `404`, con `eventoId` | Al suscribirse |
+        | `MarcaCaducada` | La marca es tan antigua que ya no se pueden calcular los cambios | `410` | No: el hub manda `Recargar` |
+        | `DemasiadasSuscripciones` | La conexión ya sigue 50 eventos | No | Al suscribirse |
+
+    # RFC 9457, el formato de error de HTTP: lo que ASP.NET produce de serie, más dos campos
+    # nuestros (codigo y lo que lo explica). Un 4xx sin codigo no es del catálogo (un proxy,
+    # una URL equivocada), y el frontal no debe confundirlo con uno suyo.
+    Problema:
+      type: object
+      required: [type, title, status, codigo]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          description: "`urn:apuestas-deportivas:problema:` seguido del código."
+          examples: ["urn:apuestas-deportivas:problema:EventoNoEncontrado"]
+        codigo:
+          $ref: "#/components/schemas/CodigoProblema"
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        parametro:
+          type: string
+          description: Solo en `ParametroNoValido`, el parámetro que no vale.
+          examples: [tamano]
+        eventoId:
+          $ref: "#/components/schemas/Id"
+          description: Solo en `EventoNoEncontrado`, el evento que no se encuentra.

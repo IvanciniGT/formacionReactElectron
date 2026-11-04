@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="tests/Jugadores.Invariantes.Pruebas/Jugadores.Invariantes.Pruebas.csproj" />
+  <Project Path="src/Jugadores.Invariantes/Jugadores.Invariantes.csproj" />
+</Solution>

@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "..",
+    "outDir": "../artifacts/compilado",
+    "declaration": false,
+    "sourceMap": true,
+    "noEmit": false
+  },
+  "include": [
+    "../src",
+    "../scripts/divergencias",
+    "../scripts/inicializar/generar.ts",
+    "../tests/unitarias"
+  ]
+}

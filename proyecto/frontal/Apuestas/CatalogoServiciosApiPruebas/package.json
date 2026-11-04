@@ -1,0 +1,75 @@
+{
+  "name": "@apuestas-deportivas/catalogo-servicios-api-pruebas",
+  "version": "0.0.0",
+  "private": true,
+  "description": "TCK de ServicioEventos: las pruebas de sistema de caja negra que tiene que pasar cualquier implementación, escritas solo contra la interfaz.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./features/*": "./features/*"
+  },
+  "files": [
+    "src",
+    "features",
+    "datos",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "//": {
+    "nota": "npm no admite comentarios en este fichero; esta clave la ignora a propósito. Aquí se explica qué es cada script y cada dependencia.",
+    "scripts": {
+      "tipos": "Comprueba los tipos.",
+      "lint": "ESLint.",
+      "lint:fix": "ESLint, corrigiendo lo que pueda.",
+      "format": "Prettier, reescribiendo.",
+      "format:check": "Prettier, solo comprobando.",
+      "verify": "Lo que tiene que pasar antes de subir. Las pruebas en sí las ejecuta cada implementación."
+    },
+    "peerDependencies": {
+      "@apuestas-deportivas/catalogo-servicios-api": "La interfaz que se prueba: la pone la implementación.",
+      "@cucumber/cucumber": "Lo pone la implementación y se le pasa a registrarPruebas: con dos copias, los pasos no se verían.",
+      "chai": "Aserciones de los pasos."
+    },
+    "devDependencies": {
+      "@apuestas-deportivas/catalogo-servicios-api": "Para los tipos mientras se escribe el TCK; en uso real lo pone la implementación.",
+      "@cucumber/cucumber": "Para los tipos mientras se escribe el TCK; en uso real lo pone la implementación.",
+      "@eslint/js": "Ver el package.json de CatalogoServiciosApi.",
+      "@types/chai": "Tipos y aserciones mientras se escribe el TCK.",
+      "@types/node": "Ver el package.json de CatalogoServiciosApi.",
+      "chai": "Tipos y aserciones mientras se escribe el TCK.",
+      "eslint": "Ver el package.json de CatalogoServiciosApi.",
+      "eslint-config-prettier": "Ver el package.json de CatalogoServiciosApi.",
+      "prettier": "Ver el package.json de CatalogoServiciosApi.",
+      "rxjs": "Para los tipos mientras se escribe el TCK; en uso real lo pone la implementación.",
+      "typescript": "Ver el package.json de CatalogoServiciosApi.",
+      "typescript-eslint": "Ver el package.json de CatalogoServiciosApi."
+    }
+  },
+  "scripts": {
+    "tipos": "tsc --noEmit",
+    "lint": "eslint -c config/eslint.config.mjs .",
+    "lint:fix": "eslint -c config/eslint.config.mjs --fix .",
+    "format": "prettier --config config/prettier.config.json --write \"{src,config}/**/*.{ts,mjs,json}\" \"*.json\"",
+    "format:check": "prettier --config config/prettier.config.json --check \"{src,config}/**/*.{ts,mjs,json}\" \"*.json\"",
+    "verify": "npm run tipos && npm run lint && npm run format:check"
+  },
+  "peerDependencies": {
+    "@apuestas-deportivas/catalogo-servicios-api": "0.0.0",
+    "@cucumber/cucumber": "^13.0.0",
+    "chai": "^6.0.0"
+  },
+  "devDependencies": {
+    "@apuestas-deportivas/catalogo-servicios-api": "file:../CatalogoServiciosApi",
+    "@cucumber/cucumber": "13.3.0",
+    "@eslint/js": "10.0.1",
+    "@types/chai": "5.2.3",
+    "@types/node": "24.19.2",
+    "chai": "6.3.0",
+    "eslint": "10.14.0",
+    "eslint-config-prettier": "10.1.8",
+    "prettier": "3.9.10",
+    "rxjs": "7.8.2",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.1"
+  }
+}

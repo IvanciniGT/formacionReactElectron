@@ -1,0 +1,18 @@
+#!/bin/sh
+# Antes de subir una rama: el CHANGELOG bien formado y las pruebas unitarias en verde.
+# Es un aviso rápido en tu máquina; lo que obliga de verdad es el pipeline. Se salta con
+# git push --no-verify, y hay que activarlo una vez por clon:
+#   git config core.hooksPath .githooks
+set -eu
+cd "$(git rev-parse --show-toplevel)"
+
+sube_rama=no
+while read -r _ sha_local ref_remota _; do
+    case "$ref_remota" in
+        refs/heads/*) [ "$sha_local" = 0000000000000000000000000000000000000000 ] || sube_rama=si ;;
+    esac
+done
+[ "$sube_rama" = si ] || exit 0
+
+sh .gitlab/version.sh comprobar
+sh .gitlab/pruebas.sh unitarias

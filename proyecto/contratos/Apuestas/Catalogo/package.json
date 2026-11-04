@@ -1,0 +1,35 @@
+{
+  "name": "@apuestas-deportivas/catalogo-contrato",
+  "version": "0.0.0",
+  "description": "Contrato del catálogo de apuestas para el jugador: el API REST (openapi.yaml) y el canal en tiempo real (asyncapi.yaml). Sin código: los tipos de cada lenguaje se generan aparte.",
+  "type": "module",
+  "exports": {
+    "./openapi.yaml": "./openapi.yaml",
+    "./asyncapi.yaml": "./asyncapi.yaml"
+  },
+  "files": [
+    "openapi.yaml",
+    "asyncapi.yaml",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "//": {
+    "nota": "npm no admite comentarios en este fichero; esta clave la ignora a propósito. Aquí se explica qué es cada script y cada dependencia.",
+    "scripts": {
+      "validar": "Valida openapi.yaml (Redocly) y asyncapi.yaml (parser de AsyncAPI, sin su CLI, que trae React).",
+      "verify": "Lo que tiene que pasar antes de subir."
+    },
+    "devDependencies": {
+      "@asyncapi/parser": "Valida asyncapi.yaml (scripts/validar-asyncapi.mjs).",
+      "@redocly/cli": "Valida openapi.yaml."
+    }
+  },
+  "scripts": {
+    "validar": "redocly lint openapi.yaml && node scripts/validar-asyncapi.mjs",
+    "verify": "npm run validar"
+  },
+  "devDependencies": {
+    "@asyncapi/parser": "3.6.6",
+    "@redocly/cli": "2.73.0"
+  }
+}

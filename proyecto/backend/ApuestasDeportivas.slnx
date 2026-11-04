@@ -1,0 +1,23 @@
+<Solution>
+  <Folder Name="/Apuestas/">
+    <Project Path="Apuestas/Dominio/src/Apuestas.Dominio/Apuestas.Dominio.csproj" />
+    <Project Path="Apuestas/Invariantes/tests/Apuestas.Invariantes.Pruebas/Apuestas.Invariantes.Pruebas.csproj" />
+    <Project Path="Apuestas/Invariantes/src/Apuestas.Invariantes/Apuestas.Invariantes.csproj" />
+  </Folder>
+  <Folder Name="/Comun/">
+    <Project Path="Comun/Invariantes/tests/Comun.Invariantes.Pruebas/Comun.Invariantes.Pruebas.csproj" />
+    <Project Path="Comun/Invariantes/src/Comun.Invariantes/Comun.Invariantes.csproj" />
+    <Project Path="Comun/Validacion/tests/Comun.Validacion.Pruebas/Comun.Validacion.Pruebas.csproj" />
+    <Project Path="Comun/Validacion/src/Comun.Validacion/Comun.Validacion.csproj" />
+  </Folder>
+  <Folder Name="/Jugadores/">
+    <Project Path="Jugadores/Dominio/src/Jugadores.Dominio/Jugadores.Dominio.csproj" />
+    <Project Path="Jugadores/Invariantes/tests/Jugadores.Invariantes.Pruebas/Jugadores.Invariantes.Pruebas.csproj" />
+    <Project Path="Jugadores/Dominio/tests/Jugadores.Dominio.Pruebas/Jugadores.Dominio.Pruebas.csproj" />
+    <Project Path="Jugadores/Invariantes/src/Jugadores.Invariantes/Jugadores.Invariantes.csproj" />
+  </Folder>
+  <Folder Name="/Operadores/">
+    <Project Path="Operadores/Dominio/src/Operadores.Dominio/Operadores.Dominio.csproj" />
+    <Project Path="Operadores/Invariantes/src/Operadores.Invariantes/Operadores.Invariantes.csproj" />
+  </Folder>
+</Solution>

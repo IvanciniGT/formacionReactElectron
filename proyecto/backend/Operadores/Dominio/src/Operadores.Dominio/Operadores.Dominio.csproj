@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- VersionPrefix solo vale para la primera publicación, cuando aún no hay ninguna
+       versión aprobada: a partir de ahí la calcula el pipeline desde CHANGELOG.md. -->
+  <PropertyGroup>
+    <PackageId>Operadores.Dominio</PackageId>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <Authors>Iván Osuna Ayuste</Authors>
+    <Description>Modelos del dominio de operadores.</Description>
+  </PropertyGroup>
+
+  <!--
+    Operadores.Invariantes se consume por versión. Esa versión aún no está publicada: en modo CI no restaura hasta que lo esté. En local, con el repo padre clonado, se usa su código directamente
+    (ver UsarFuentesLocales en Directory.Build.props); en el CI, siempre el paquete.
+    Entre corchetes: esa versión exacta, no «esa o superior».
+  -->
+  <PropertyGroup>
+    <FuenteInvariantes>$(RaizBackend)Operadores/Invariantes/src/Operadores.Invariantes/Operadores.Invariantes.csproj</FuenteInvariantes>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UsarFuentesLocales)' == 'true' And Exists('$(FuenteInvariantes)')">
+    <ProjectReference Include="$(FuenteInvariantes)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UsarFuentesLocales)' != 'true' Or !Exists('$(FuenteInvariantes)')">
+    <PackageReference Include="Operadores.Invariantes" Version="[0.1.0-desa.1]" />
+  </ItemGroup>
+
+</Project>

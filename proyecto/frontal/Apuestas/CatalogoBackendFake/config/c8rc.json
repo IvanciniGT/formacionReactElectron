@@ -1,0 +1,15 @@
+{
+  "include": [
+    "artifacts/compilado/src/catalogo/catalogo.js",
+    "src/catalogo/catalogo.ts"
+  ],
+  "exclude": [],
+  "exclude-after-remap": true,
+  "reporter": ["text", "html", "cobertura", "lcov"],
+  "reports-dir": "artifacts/cobertura",
+  "check-coverage": true,
+  "lines": 90,
+  "branches": 90,
+  "functions": 90,
+  "statements": 90
+}

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="tests/Comun.Invariantes.Pruebas/Comun.Invariantes.Pruebas.csproj" />
+  <Project Path="src/Comun.Invariantes/Comun.Invariantes.csproj" />
+</Solution>

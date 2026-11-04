@@ -1,0 +1,31 @@
+<Project>
+
+  <!-- Informe primero y umbral después, para que el informe exista también cuando falla. -->
+  <Target Name="InformeCobertura"
+          AfterTargets="GenerateCoverageResultAfterTest"
+          Condition="$(MSBuildProjectName.Contains('.Pruebas'))">
+    <ReportGenerator ReportFiles="$(CarpetaCobertura)coverage.cobertura.xml"
+                     TargetDirectory="$(CarpetaCobertura)informe"
+                     ReportTypes="Html;TextSummary" />
+
+    <XmlPeek XmlInputPath="$(CarpetaCobertura)coverage.cobertura.xml" Query="/coverage/@line-rate">
+      <Output TaskParameter="Result" PropertyName="TasaLineas" />
+    </XmlPeek>
+    <XmlPeek XmlInputPath="$(CarpetaCobertura)coverage.cobertura.xml" Query="/coverage/@branch-rate">
+      <Output TaskParameter="Result" PropertyName="TasaRamas" />
+    </XmlPeek>
+
+    <PropertyGroup>
+      <PorcentajeLineas>$([System.Math]::Round($([MSBuild]::Multiply($(TasaLineas), 100)), 2))</PorcentajeLineas>
+      <PorcentajeRamas>$([System.Math]::Round($([MSBuild]::Multiply($(TasaRamas), 100)), 2))</PorcentajeRamas>
+      <TextoUmbral Condition="'$(UmbralCobertura)' != ''"> (mínimo $(UmbralCobertura) %)</TextoUmbral>
+    </PropertyGroup>
+
+    <Message Importance="high"
+             Text="Cobertura de $(MSBuildProjectName): líneas $(PorcentajeLineas) %, ramas $(PorcentajeRamas) %$(TextoUmbral). Informe: $(CarpetaCobertura)informe/index.html" />
+    <!-- Un solo Error: el primero corta el target y el segundo no llegaría a verse. -->
+    <Error Condition="'$(UmbralCobertura)' != '' And ($(PorcentajeLineas) &lt; $(UmbralCobertura) Or $(PorcentajeRamas) &lt; $(UmbralCobertura))"
+           Text="$(MSBuildProjectName): cobertura por debajo del $(UmbralCobertura) % (líneas $(PorcentajeLineas) %, ramas $(PorcentajeRamas) %)." />
+  </Target>
+
+</Project>

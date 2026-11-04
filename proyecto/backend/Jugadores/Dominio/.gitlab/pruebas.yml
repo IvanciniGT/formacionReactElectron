@@ -1,0 +1,128 @@
+# Las MR, si alguien las usa, prueban lo mismo que su rama destino.
+.pruebas:
+  stage: pruebas
+  artifacts:
+    when: always
+    paths:
+      - artifacts/cobertura/
+      - artifacts/informes/
+    reports:
+      junit: artifacts/informes/junit/*.xml
+
+# dotnet test ya mide la cobertura y falla por debajo del umbral (Directory.Build.targets).
+unitarias:
+  extends: .pruebas
+  script:
+    - sh .gitlab/pruebas.sh unitarias --no-restore
+  artifacts:
+    reports:
+      junit: artifacts/informes/junit/*.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: artifacts/cobertura/*/coverage.cobertura.xml
+  coverage: '/Cobertura de \S+: l\S+ ([0-9.]+) %/'
+
+integracion:
+  extends: .pruebas
+  script:
+    - sh .gitlab/pruebas.sh integracion --no-restore
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "main"
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+
+sistema:
+  extends: .pruebas
+  script:
+    - sh .gitlab/pruebas.sh sistema --no-restore
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+
+# La versión que toca, para los jobs de después. En main, además, que lo que llega es
+# publicable como candidata: hay algo en Unreleased y ninguna dependencia -desa.
+version:
+  stage: calidad
+  before_script: []
+  needs: []
+  script:
+    - sh .gitlab/version.sh comprobar
+    - |
+      if [ "$CI_COMMIT_BRANCH" = main ] || [ "${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-}" = main ]; then
+        sh .gitlab/version.sh comprobar-main
+      fi
+    - echo "VERSION=$(sh .gitlab/version.sh calcular)" >> version.env
+    - echo "NIVEL=$(sh .gitlab/version.sh nivel)" >> version.env
+    - cat version.env
+  artifacts:
+    reports:
+      dotenv: version.env
+
+# El SDK compara el API público con la última versión aprobada y falla si hay un cambio
+# incompatible y la versión no sube la MAJOR. En 0.x no se comprueba: SemVer permite
+# romper el contrato mientras no hay 1.0.0.
+compatibilidad:
+  stage: calidad
+  needs:
+    - version
+  script:
+    - BASE="$(sh .gitlab/version.sh ultima-final)"
+    - |
+      case "$BASE" in
+        ""|0.*) echo "Sin versión 1.x aprobada (${BASE:-ninguna}): no hay contra qué comparar." ;;
+        *) dotnet pack "$PROYECTO_PAQUETE" -c Release -o artifacts/compatibilidad -p:Version="$VERSION" \
+             -p:EnablePackageValidation=true -p:PackageValidationBaselineVersion="$BASE" ;;
+      esac
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+
+# Community analiza una sola rama por proyecto: se analiza dev, que es donde se trabaja.
+#
+# Reglas que se ignoran, y por qué:
+#   S1135 (TODO): «todo» en castellano no es un TODO; Sonar lee la palabra y pide
+#                 completar una tarea que no existe. Igual que en los proyectos de node.
+#   S927 (parámetros con el nombre de la base): el código va en español. Al sobrescribir
+#                 IsValid(value) el parámetro se llama valor; solo afecta a quien llame con
+#                 argumentos con nombre.
+#
+# El scanner de .NET envuelve una compilación (begin, build, end). Las pruebas no se
+# repiten: la cobertura llega como artefacto de unitarias, en la misma ruta.
+#
+# El job no existe hasta que SONAR_TOKEN y SONAR_HOST_URL estén definidas. Si se crean
+# protegidas no llegan a dev, que no es rama protegida, y el job desaparece sin avisar.
+sonarqube:
+  stage: calidad
+  needs:
+    - unitarias
+    - version
+  variables:
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+  cache:
+    - key: nuget
+      paths:
+        - .nuget/packages/
+    - key: sonar
+      paths:
+        - .sonar/cache/
+  script:
+    - dotnet tool install dotnet-sonarscanner --version 12.0.0 --tool-path .herramientas
+    - |
+      .herramientas/dotnet-sonarscanner begin \
+        /k:"$SONAR_PROJECT_KEY" \
+        /v:"$VERSION" \
+        /d:sonar.host.url="$SONAR_HOST_URL" \
+        /d:sonar.token="$SONAR_TOKEN" \
+        /d:sonar.cs.opencover.reportsPaths="artifacts/cobertura/*/coverage.opencover.xml" \
+        /d:sonar.exclusions="artifacts/**" \
+        /d:sonar.issue.ignore.multicriteria=todo-cs,todo-xml,nombres \
+        /d:sonar.issue.ignore.multicriteria.todo-cs.ruleKey=csharpsquid:S1135 \
+        /d:sonar.issue.ignore.multicriteria.todo-cs.resourceKey="**/*" \
+        /d:sonar.issue.ignore.multicriteria.todo-xml.ruleKey=xml:S1135 \
+        /d:sonar.issue.ignore.multicriteria.todo-xml.resourceKey="**/*" \
+        /d:sonar.issue.ignore.multicriteria.nombres.ruleKey=csharpsquid:S927 \
+        /d:sonar.issue.ignore.multicriteria.nombres.resourceKey="**/*" \
+        /d:sonar.qualitygate.wait=true
+    - dotnet build "$SOLUCION" --no-restore
+    - .herramientas/dotnet-sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev" && $SONAR_HOST_URL && $SONAR_TOKEN
