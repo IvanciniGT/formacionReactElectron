@@ -1,6 +1,7 @@
 import { HubConnection } from "@microsoft/signalr";
 import sinon from "sinon";
 import { adaptarHubConnection } from "../../../src/index.js";
+import { assert } from "chai";
 import { expect } from "../ayudas.js";
 
 // No se prueba SignalR: se prueba que el adaptador llama a lo que toca de HubConnection.
@@ -27,10 +28,12 @@ describe("adaptarHubConnection", () => {
   it("invocar es invoke con un único argumento, y no devuelve nada", async () => {
     const conexion = adaptarHubConnection(hub);
 
-    // invoke devuelve lo que conteste el servidor; el adaptador lo descarta.
-    await expect(
-      conexion.invocar("Suscribir", { eventoId: "e" }),
-    ).to.eventually.equal(undefined);
+    // invoke devuelve lo que conteste el servidor; el adaptador lo descarta. El tipo ya dice
+    // void: lo que se prueba es que, en ejecución, no se cuele nada.
+    const invocado: Promise<unknown> = conexion.invocar("Suscribir", {
+      eventoId: "e",
+    });
+    assert.isUndefined(await invocado);
     expect(hub.invoke.firstCall.args).to.deep.equal([
       "Suscribir",
       { eventoId: "e" },

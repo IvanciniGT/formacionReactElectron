@@ -1,3 +1,5 @@
 node_modules/
 dist/
 artifacts/
+# Lo que deja el scanner de Sonar en cada análisis.
+.scannerwork/

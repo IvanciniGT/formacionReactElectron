@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { assert, expect } from "chai";
 import {
   comprobarExhaustivo,
   DemasiadasSuscripcionesError,
@@ -29,7 +29,7 @@ describe("errores", () => {
     expect(new PeticionIncorrectaError("x", "tamano").parametro).to.equal(
       "tamano",
     );
-    expect(new PeticionIncorrectaError("x").parametro).to.equal(undefined);
+    assert.isUndefined(new PeticionIncorrectaError("x").parametro);
   });
 
   it("PeticionIncorrectaError lleva el detalle", () => {

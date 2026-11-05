@@ -1,0 +1,61 @@
+# Solo publica lo que ha pasado sus pruebas: si algo falla en dev o en main, el pipeline
+# se queda en rojo y no sale ninguna versión.
+
+# Provisional: la versión que toca según el CHANGELOG, con el número de pipeline. Puede
+# cambiar de una a otra (1.1.0-desa.7, 2.0.0-desa.8 si alguien añade un Removed): por eso
+# es provisional. No lleva tag: dev se puede reescribir sin dejar nada colgando.
+#
+# Es manual: en dev se sube, se rebasa y se vuelve a subir varias veces al día, y no cada
+# push merece un paquete. Se pulsa cuando otro componente necesita lo que hay en dev.
+publicar-desa:
+  stage: publicacion
+  needs:
+    - unitarias
+    - integracion
+    - version
+  script:
+    - |
+      if [ "$NIVEL" = nada ] && [ -n "$(sh .gitlab/version.sh ultima-final)" ]; then
+        echo "Unreleased está vacío: no hay nada nuevo que publicar."
+        exit 0
+      fi
+    - sh .gitlab/publicar.sh "$VERSION-desa.$CI_PIPELINE_IID"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev"
+      when: manual
+
+# Candidata: la versión ya definitiva. Lleva tag, y main no se reescribe.
+publicar-rc:
+  stage: publicacion
+  needs:
+    - unitarias
+    - integracion
+    - sistema
+    - version
+    - compatibilidad
+  script:
+    - RC="$VERSION-rc.$(sh .gitlab/version.sh siguiente-rc "$VERSION")"
+    - sh .gitlab/publicar.sh "$RC"
+    - sh .gitlab/gitlab.sh tag "$RC"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+# Que una candidata es aceptable lo decide una persona: es el único paso manual. Publica
+# la final del mismo commit que la rc, con su tag y su Release, y pasa en el CHANGELOG de
+# dev lo que entró en esta versión a su sección.
+aceptar:
+  stage: aceptacion
+  needs:
+    - version
+    - publicar-rc
+  script:
+    - |
+      git tag --points-at HEAD | grep -qE "^v${VERSION}-rc\.[0-9]+$" \
+        || { echo "Este commit no tiene ninguna v${VERSION}-rc.N: no hay candidata que aceptar."; exit 1; }
+    - sh .gitlab/publicar.sh "$VERSION"
+    - sh .gitlab/gitlab.sh tag "$VERSION"
+    - sh .gitlab/gitlab.sh release "$VERSION"
+    - sh .gitlab/gitlab.sh formalizar "$VERSION"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual

@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Invariantes vive en otro repo y se consume por versión. En local, con el repo padre
+    clonado, se usa su código directamente (ver UsarFuentesLocales en
+    Directory.Build.props); en el CI, siempre el paquete. Entre corchetes: esa versión
+    exacta, no «esa o superior».
+  -->
+  <PropertyGroup>
+    <FuenteInvariantes>$(RaizBackend)Apuestas/Invariantes/src/Apuestas.Invariantes/Apuestas.Invariantes.csproj</FuenteInvariantes>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UsarFuentesLocales)' == 'true' And Exists('$(FuenteInvariantes)')">
+    <ProjectReference Include="$(FuenteInvariantes)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UsarFuentesLocales)' != 'true' Or !Exists('$(FuenteInvariantes)')">
+    <PackageReference Include="Apuestas.Invariantes" Version="[1.0.0-desa.1]" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- 0.x mientras el dominio se está definiendo: SemVer permite romper el contrato sin subir a 2.0. -->
+  <!-- VersionPrefix solo vale para la primera publicación, cuando aún no hay ninguna
+       versión aprobada: a partir de ahí la calcula el pipeline desde CHANGELOG.md. -->
+  <PropertyGroup>
+    <PackageId>Apuestas.Dominio</PackageId>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <Authors>Iván Osuna Ayuste</Authors>
+    <Description>Modelos del dominio de apuestas deportivas.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

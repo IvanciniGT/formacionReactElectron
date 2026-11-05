@@ -51,8 +51,14 @@ Si los dos ficheros definen un esquema con el mismo nombre, falla.
 
 ## Trabajar con él
 
+Se instala desde la raíz del proyecto, una vez para todos los paquetes (ver
+[*El frontal y los contratos*](../../../README.md#el-frontal-y-los-contratos-npm-workspaces)):
+
 ```bash
+# Una vez, en la raíz del proyecto (proyecto/):
 npm install
+npm run build
+# Y en esta carpeta:
 npm run build        # genera y compila a dist/: hay que hacerlo antes de usarlo desde otro proyecto
 npm run verify       # genera, tipos, ESLint, Prettier y pruebas con cobertura
 ```

@@ -1,5 +1,0 @@
-{
-  "node-option": ["import=tsx"],
-  "spec": ["tests/unitarias/**/*.test.ts"],
-  "reporter": "spec"
-}

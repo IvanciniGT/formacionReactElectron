@@ -20,7 +20,7 @@ todas cumplen lo mismo.
 | `src/soporte/entorno.ts` | `EntornoDePruebas`: el backend contra el que se ejecuta |
 | `src/soporte/mundo.ts` | Lo que comparten los pasos de un escenario, y ayudas como `esperarA` |
 | `src/registrar.ts` | `registrarPruebas`, el punto de entrada |
-| `datos/catalogo.json` | El catálogo con el que arranca cada escenario |
+| `datos/catalogo.json` | El catálogo con el que arranca cada escenario. También con el que arranca el backend fake con `npm start`: hay uno solo |
 
 ## Sistema o integración: depende de contra qué
 
@@ -111,8 +111,14 @@ ejemplo es [CatalogoServiciosImpl](../CatalogoServiciosImpl/README.md).
 
 ## Trabajar con él
 
+Se instala desde la raíz del proyecto, una vez para todos los paquetes (ver
+[*El frontal y los contratos*](../../../README.md#el-frontal-y-los-contratos-npm-workspaces)):
+
 ```bash
+# Una vez, en la raíz del proyecto (proyecto/):
 npm install
+npm run build
+# Y en esta carpeta:
 npm run verify       # tipos, ESLint y Prettier
 ```
 

@@ -1,6 +1,0 @@
-Repo padre del proyecto: componentes como submódulos de git
-
-comun-validacion, apuestas-invariantes y apuestas-dominio, cada uno
-siguiendo su rama main. Incluye la solución que los junta para el IDE.
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

@@ -8,6 +8,7 @@ import { registrarPasosCatalogo } from "./pasos/catalogo.js";
 import { registrarPasosConfiguracion } from "./pasos/configuracion.js";
 import { registrarPasosErrores } from "./pasos/errores.js";
 import { registrarPasosTiempoReal } from "./pasos/tiempo-real.js";
+import { capturarConsola, type CapturaDeConsola } from "./soporte/consola.js";
 import type { DatosDePrueba, EntornoDePruebas } from "./soporte/entorno.js";
 import type { MundoCatalogo } from "./soporte/mundo.js";
 
@@ -62,10 +63,30 @@ export function registrarPruebas({
     recibidos: MundoCatalogo["recibidos"] = [];
     terminada = false;
     suscripcion: MundoCatalogo["suscripcion"];
+    consola: CapturaDeConsola | undefined;
   }
 
   cucumber.setDefaultTimeout(10_000);
   cucumber.setWorldConstructor(Mundo);
+
+  // El primer Before y, como los After van en orden inverso, el último After: se captura
+  // todo lo que pasa en el escenario, también al cerrar el servicio y parar el backend.
+  cucumber.Before(function (this: Mundo) {
+    this.consola = capturarConsola();
+  });
+  cucumber.After(function (this: Mundo, { pickle, result }) {
+    const lineas = this.consola?.restaurar() ?? [];
+    const fallido =
+      result !== undefined &&
+      result.status !== cucumber.Status.PASSED &&
+      result.status !== cucumber.Status.SKIPPED;
+    if (!fallido || lineas.length === 0) return;
+    const texto = lineas.join("\n");
+    this.attach(texto, "text/plain");
+    process.stderr.write(
+      `\nLo que escribió en la consola «${pickle.name}», que ha fallado:\n${texto}\n`,
+    );
+  });
 
   // Antes que nada: si el escenario necesita controlar el backend y este entorno no
   // puede, se salta, y se ve como saltado en el informe.

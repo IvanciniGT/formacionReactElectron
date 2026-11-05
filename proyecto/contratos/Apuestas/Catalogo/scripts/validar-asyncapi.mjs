@@ -1,12 +1,14 @@
 // Valida asyncapi.yaml, incluidas sus referencias a openapi.yaml. Con el parser de AsyncAPI y
 // no con su CLI: el CLI trae el generador de código, y con él React, que aquí no pinta nada.
 import { fromFile, Parser } from "@asyncapi/parser";
+import { fileURLToPath } from "node:url";
 
 const GRAVEDAD = ["error", "aviso", "información", "sugerencia"];
 
 const { diagnostics: diagnosticos } = await fromFile(
   new Parser(),
-  new URL("../asyncapi.yaml", import.meta.url).pathname,
+  // fileURLToPath y no .pathname: en Windows, .pathname da /C:/… y Node lo convierte en C:\C:\….
+  fileURLToPath(new URL("../asyncapi.yaml", import.meta.url)),
 ).parse();
 
 for (const d of diagnosticos)

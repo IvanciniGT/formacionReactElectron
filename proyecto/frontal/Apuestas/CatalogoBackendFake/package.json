@@ -2,7 +2,7 @@
   "name": "@apuestas-deportivas/catalogo-backend-fake",
   "version": "0.0.0",
   "private": true,
-  "description": "Fake del backend del catálogo (un doble de prueba que funciona de verdad, con los datos en memoria): el API REST y el hub SignalR del contrato, con datos de un JSON de ejemplo. Para pruebas de sistema y para probar los frontales a mano.",
+  "description": "Fake del backend del catálogo (un doble de prueba que funciona de verdad, con los datos en memoria): el API REST y el hub SignalR del contrato, con los datos de prueba del TCK. Para pruebas de sistema y para probar los frontales a mano.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
@@ -23,11 +23,10 @@
     },
     "dependencies": {
       "@apuestas-deportivas/catalogo-modelos-servidor": "Los modelos del servidor, generados del contrato: lo que responde el fake es lo que dice el contrato, o no compila.",
-      "ws": "El servidor WebSocket sobre el que va el hub SignalR."
+      "ws": "El servidor WebSocket sobre el que va el hub SignalR.",
+      "@apuestas-deportivas/catalogo-servicios-api-pruebas": "Los datos con los que arranca (los del TCK, que son los que esperan sus escenarios) y la interfaz del entorno que implementa EntornoFake."
     },
     "devDependencies": {
-      "@apuestas-deportivas/catalogo-servicios-api-pruebas": "Los tipos del TCK mientras se escribe EntornoFake.",
-      "@eslint/js": "Reglas base de ESLint.",
       "@types/chai": "Tipos de chai.",
       "@types/mocha": "Tipos de mocha.",
       "@types/node": "Tipos de Node.",
@@ -36,36 +35,33 @@
       "c8": "Cobertura de código, con el umbral del 90 %.",
       "chai": "Aserciones de las pruebas (expect).",
       "eslint": "Linter: npm run lint.",
-      "eslint-config-prettier": "Apaga las reglas de ESLint que chocarían con Prettier.",
       "mocha": "Ejecuta las pruebas unitarias.",
       "prettier": "Formato del código: npm run format.",
       "sinon": "Dobles de prueba: spies, stubs y fakes.",
       "tsx": "Ejecuta TypeScript sin compilar: Mocha, Cucumber y los scripts lo cargan.",
       "typescript": "El compilador. En la 5.9: openapi-typescript y typescript-eslint aún no admiten la 7.",
-      "typescript-eslint": "Reglas de ESLint para TypeScript, con información de tipos (strictTypeChecked)."
+      "@apuestas-deportivas/configuracion-frontal": "ESLint, Prettier y las opciones base del compilador, comunes a todo el frontal."
     },
-    "peerDependencies": {
-      "@apuestas-deportivas/catalogo-servicios-api-pruebas": "Solo para EntornoFake (./pruebas), y solo sus tipos: lo pone quien ejecuta el TCK. Opcional: el fake se puede usar sin él."
-    }
+    "peerDependencies": {}
   },
   "scripts": {
     "start": "tsx src/main.ts",
     "tipos": "tsc --noEmit",
     "lint": "eslint -c config/eslint.config.mjs .",
     "lint:fix": "eslint -c config/eslint.config.mjs --fix .",
-    "format": "prettier --config config/prettier.config.json --write \"{src,tests,config}/**/*.{ts,mjs,json}\" \"*.json\"",
-    "format:check": "prettier --config config/prettier.config.json --check \"{src,tests,config}/**/*.{ts,mjs,json}\" \"*.json\"",
-    "test": "mocha --config config/mocharc.json",
-    "cobertura": "node -e \"require('node:fs').rmSync('artifacts/compilado', {recursive: true, force: true})\" && tsc -p config/tsconfig.cobertura.json && c8 --config config/c8rc.json mocha --config config/mocharc.cobertura.json",
+    "format": "prettier --write \"{src,tests,config}/**/*.{ts,mjs,cjs,json}\" \"*.json\"",
+    "format:check": "prettier --check \"{src,tests,config}/**/*.{ts,mjs,cjs,json}\" \"*.json\"",
+    "test": "mocha --config config/mocharc.cjs",
+    "cobertura": "configuracion-frontal cobertura",
     "verify": "npm run tipos && npm run lint && npm run format:check && npm run cobertura"
   },
   "dependencies": {
-    "@apuestas-deportivas/catalogo-modelos-servidor": "file:../CatalogoModelosServidor",
+    "@apuestas-deportivas/catalogo-modelos-servidor": "0.0.0",
+    "@apuestas-deportivas/catalogo-servicios-api-pruebas": "0.0.0",
     "ws": "8.22.1"
   },
   "devDependencies": {
-    "@apuestas-deportivas/catalogo-servicios-api-pruebas": "file:../CatalogoServiciosApiPruebas",
-    "@eslint/js": "10.0.1",
+    "@apuestas-deportivas/configuracion-frontal": "0.0.0",
     "@types/chai": "5.2.3",
     "@types/mocha": "10.0.10",
     "@types/node": "24.19.2",
@@ -74,20 +70,16 @@
     "c8": "12.0.0",
     "chai": "6.3.0",
     "eslint": "10.14.0",
-    "eslint-config-prettier": "10.1.8",
     "mocha": "12.0.3",
     "prettier": "3.9.10",
     "sinon": "22.1.0",
     "tsx": "4.23.15",
-    "typescript": "5.9.3",
-    "typescript-eslint": "8.72.1"
-  },
-  "peerDependencies": {
-    "@apuestas-deportivas/catalogo-servicios-api-pruebas": "0.0.0"
+    "typescript": "5.9.3"
   },
   "peerDependenciesMeta": {
     "@apuestas-deportivas/catalogo-servicios-api-pruebas": {
       "optional": true
     }
-  }
+  },
+  "prettier": "@apuestas-deportivas/configuracion-frontal/prettier"
 }

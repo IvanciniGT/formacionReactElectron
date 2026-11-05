@@ -60,6 +60,13 @@ describe("inicializar los modelos (día 0)", () => {
             },
           ],
         },
+        // Lo que añade a su base no tiene nada obligatorio.
+        Anexo: {
+          allOf: [
+            { $ref: "#/components/schemas/Base" },
+            { type: "object", properties: { lista: { type: "array" } } },
+          ],
+        },
         Problema: { type: "object", properties: { title: { type: "string" } } },
         MensajeCancelar: { $ref: "#/components/schemas/Base" },
       },
@@ -92,6 +99,12 @@ describe("inicializar los modelos (día 0)", () => {
       expect(modelos).to.include("  readonly raro?: unknown;");
     });
 
+    it("una lista sin tipo de elemento es de unknown, y sin required todo es opcional", () => {
+      expect(modelos).to.include(
+        "export interface Anexo extends Base {\n  readonly lista?: readonly unknown[];\n}",
+      );
+    });
+
     it("el TSDoc lleva la descripción y el enlace a su límite", () => {
       expect(modelos).to.include(
         "  /**\n   * Primera línea.\n   * Segunda línea.\n   * Ver {@link LIMITES.Ficha.nombre}.\n   */\n  readonly nombre?: string;",
@@ -111,6 +124,7 @@ describe("inicializar los modelos (día 0)", () => {
           servidor: 'components["schemas"]["Ficha"]',
           esquema: "Ficha",
         },
+        { frontal: "Anexo", servidor: 'components["schemas"]["Anexo"]' },
       ]);
       expect(datos.limites).to.deep.equal({
         Ficha: { nombre: { longitudMaxima: 9 } },

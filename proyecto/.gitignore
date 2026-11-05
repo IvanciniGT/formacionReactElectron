@@ -2,3 +2,10 @@
 bin/
 obj/
 .DS_Store
+
+# Los .git de los que fueron submódulos, guardados con su historial para cuando vuelvan a
+# ser repos propios. No se suben: son la base de datos de git, no código.
+backend/**/.gitPaLuego/
+
+# Lo que deja la extensión 42Crunch de VS Code al abrir un openapi.yaml.
+.42c/

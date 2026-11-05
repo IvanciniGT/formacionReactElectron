@@ -1,4 +1,0 @@
-{
-  "spec": ["artifacts/compilado/tests/unitarias/**/*.test.js"],
-  "reporter": "spec"
-}

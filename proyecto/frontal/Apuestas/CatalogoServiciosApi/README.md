@@ -190,9 +190,14 @@ la suya, habría dos copias de RxJS y los `Observable` de una no serían los de 
 
 ## Trabajar con él
 
+Se instala desde la raíz del proyecto, una vez para todos los paquetes (ver
+[*El frontal y los contratos*](../../../README.md#el-frontal-y-los-contratos-npm-workspaces)):
+
 ```bash
-(cd ../CatalogoModelosServidor && npm install && npm run build)
+# Una vez, en la raíz del proyecto (proyecto/):
 npm install
+npm run build
+# Y en esta carpeta:
 npm run build        # dist/: lo que usan la implementación y las aplicaciones
 npm run verify       # tipos, ESLint, Prettier, pruebas con cobertura y divergencias
 ```
@@ -210,9 +215,9 @@ npm run verify       # tipos, ESLint, Prettier, pruebas con cobertura y divergen
 | `verify` | Todo lo anterior: lo que tiene que pasar antes de subir |
 | `sonar` | Análisis en SonarQube: `SONAR_TOKEN=… npm run sonar`, después de `cobertura` |
 
-**Uso desde otro proyecto, sin registro:** `"@apuestas-deportivas/catalogo-servicios-api":
-"file:../CatalogoServiciosApi"`. npm enlaza la carpeta; cuando esté el registro de GitLab,
-solo cambia esa línea por una versión.
+**Uso desde otro paquete del proyecto:** `"@apuestas-deportivas/catalogo-servicios-api":
+"0.0.0"`, y que esté en los workspaces de la raíz: npm enlaza la carpeta, sin registro.
+Cuando esté el registro de GitLab, la misma línea vale para instalarla de allí.
 
 **La cobertura se mide sobre lo que compila `tsc`**, no sobre lo que ejecuta tsx: tsx
 añade funciones auxiliares que descuadran la cobertura y dan por no ejecutado código que
@@ -228,10 +233,10 @@ con su ruta:
 
 | Fichero | De qué |
 |---|---|
-| `config/tsconfig.build.json` | La compilación a `dist/` |
-| `config/tsconfig.cobertura.json` | La compilación con la que se mide la cobertura |
-| `config/mocharc.json` · `config/mocharc.cobertura.json` | Mocha, para el día a día y para la cobertura |
-| `config/c8rc.json` | c8: qué se mide, umbrales e informes |
-| `config/cucumber.json` | Cucumber (solo en la implementación) |
-| `config/eslint.config.mjs` · `config/prettier.config.json` | ESLint y Prettier |
-| `config/sonar-project.properties` | SonarQube |
+| `config/tsconfig.build.json` | La compilación a `dist/`: solo extiende la común |
+| `config/tsconfig.cobertura.json` | La compilación con la que se mide la cobertura: extiende la común, más los scripts del detector y del día 0 |
+| `config/mocharc.cjs` | Mocha para el día a día: reexporta la común (la de la cobertura la pone `configuracion-frontal cobertura`) |
+| `config/c8rc.json` | c8: **solo qué se mide**. Umbrales e informes son los comunes, y los junta `configuracion-frontal cobertura` |
+| `config/eslint.config.mjs` | ESLint: una llamada a la configuración común |
+
+Lo común (Prettier, la base de TypeScript, los umbrales de cobertura y SonarQube) está en [Configuracion](../../Comun/Configuracion/README.md). Prettier se indica con la clave `prettier` de `package.json`, y Sonar no tiene fichero: `configuracion-frontal sonar` saca la clave del nombre del paquete.

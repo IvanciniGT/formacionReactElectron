@@ -1,0 +1,16 @@
+{
+  // Solo opciones del compilador: las rutas (include, outDir, rootDir) se resuelven desde el
+  // fichero donde se escriben, así que cada paquete pone las suyas.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "sourceMap": true
+  }
+}

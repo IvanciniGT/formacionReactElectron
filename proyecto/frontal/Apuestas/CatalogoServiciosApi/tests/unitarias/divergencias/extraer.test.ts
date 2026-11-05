@@ -72,4 +72,23 @@ describe("extraer", function () {
       extraer(ORIGEN, [{ frontal: "NoExiste", servidor: "FichaServidor" }]),
     ).to.throw("La tabla de correspondencias no compila");
   });
+
+  it("en un fichero que no es un módulo no hay modelos", () => {
+    const { modelos: ninguno } = extraer(
+      {
+        ...ORIGEN,
+        modelosFrontal:
+          "./tests/unitarias/divergencias/ejemplo/sin-modulo.d.ts",
+      },
+      [],
+    );
+    expect(ninguno).to.deep.equal([]);
+  });
+
+  it("sin tsconfig.json en la raíz, lo dice", () => {
+    const sinTsconfig = join(ORIGEN.raiz, "tests", "unitarias");
+    expect(() => extraer({ ...ORIGEN, raiz: sinTsconfig }, [])).to.throw(
+      `No se puede leer ${sinTsconfig}/tsconfig.json.`,
+    );
+  });
 });

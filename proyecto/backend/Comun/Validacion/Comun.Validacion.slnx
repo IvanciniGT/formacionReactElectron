@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="tests/Comun.Validacion.Pruebas/Comun.Validacion.Pruebas.csproj" />
+  <Project Path="src/Comun.Validacion/Comun.Validacion.csproj" />
+</Solution>

@@ -8,6 +8,7 @@ import {
   aPaginaEventos,
   aParametros,
 } from "../../../src/mappers/mappers.js";
+import { assert } from "chai";
 import { eventoDetalle, expect, mercado } from "../ayudas.js";
 
 describe("mappers", () => {
@@ -37,11 +38,11 @@ describe("mappers", () => {
   });
 
   it("sin mercado principal, o si no viene, queda en null", () => {
-    expect(
+    assert.isNull(
       aEvento({ ...eventoDetalle(), mercadoPrincipal: null }).mercadoPrincipal,
-    ).to.equal(null);
+    );
     const { mercadoPrincipal: _, ...sinCampo } = eventoDetalle();
-    expect(aEvento(sinCampo).mercadoPrincipal).to.equal(null);
+    assert.isNull(aEvento(sinCampo).mercadoPrincipal);
   });
 
   it("el detalle lleva sus grupos y su marca", () => {

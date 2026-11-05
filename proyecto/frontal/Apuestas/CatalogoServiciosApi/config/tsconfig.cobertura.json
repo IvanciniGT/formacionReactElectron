@@ -1,16 +1,12 @@
 {
-  "extends": "../tsconfig.json",
-  "compilerOptions": {
-    "rootDir": "..",
-    "outDir": "../artifacts/compilado",
-    "declaration": false,
-    "sourceMap": true,
-    "noEmit": false
-  },
+  "extends": [
+    "../tsconfig.json",
+    "@apuestas-deportivas/configuracion-frontal/tsconfig.cobertura.json"
+  ],
   "include": [
-    "../src",
-    "../scripts/divergencias",
-    "../scripts/inicializar/generar.ts",
-    "../tests/unitarias"
+    "${configDir}/../src",
+    "${configDir}/../scripts/divergencias",
+    "${configDir}/../scripts/inicializar/generar.ts",
+    "${configDir}/../tests/unitarias"
   ]
 }

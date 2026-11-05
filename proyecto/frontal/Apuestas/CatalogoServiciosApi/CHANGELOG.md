@@ -21,3 +21,10 @@ Todos los cambios de este proyecto, en formato
 - `npm run inicializar-modelos`: el día 0 de los modelos, los `LIMITES` y la tabla de correspondencias, desde el contrato. No pisa ficheros existentes.
 - Detector de divergencias con los modelos del servidor (`npm run divergencias`): avisa de campos sin equivalente, valores de estado distintos y constantes que no coinciden.
 - Errores `EventoNoEncontradoError`, `PeticionIncorrectaError`, `ServicioNoDisponibleError`, `SuscripcionDuplicadaError` y `DemasiadasSuscripcionesError`, la unión `ErrorServicioEventos`, y los `@throws` de cada método. `PeticionIncorrectaError.parametro`: el parámetro que no vale.
+
+### Changed
+- Mocha, la cobertura y SonarQube vienen de `configuracion-frontal`: `config/mocharc.cjs`, `config/c8rc.json` solo con lo que se cubre, y sin `sonar-project.properties`.
+- Instalación desde la raíz del proyecto (npm workspaces). ESLint, Prettier y las opciones base de TypeScript vienen de `@apuestas-deportivas/configuracion-frontal`; las dependencias propias, por versión y no por `file:`.
+
+### Fixed
+- `divergencias`: los imports del fichero de pares se escriben con «/» también en Windows, donde `relative()` da «\».

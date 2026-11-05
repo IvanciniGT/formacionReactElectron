@@ -1,11 +1,6 @@
 {
-  "extends": "../tsconfig.json",
-  "compilerOptions": {
-    "rootDir": "..",
-    "outDir": "../artifacts/compilado",
-    "declaration": false,
-    "sourceMap": true,
-    "noEmit": false
-  },
-  "include": ["../src", "../tests/unitarias"]
+  "extends": [
+    "../tsconfig.json",
+    "@apuestas-deportivas/configuracion-frontal/tsconfig.cobertura.json"
+  ]
 }

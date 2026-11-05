@@ -32,26 +32,24 @@
       "test": "Genera y pasa las pruebas unitarias, con tsx: rápido, para el día a día.",
       "cobertura": "Pruebas unitarias sobre lo compilado por tsc, con c8 y su umbral: la cobertura de tsx no es fiable. Borra antes lo compilado: si no, una prueba movida o borrada se seguiría ejecutando desde su copia vieja.",
       "verify": "Todo lo anterior: lo que tiene que pasar antes de subir.",
-      "sonar": "Análisis en SonarQube. Antes, npm run cobertura; el token, en SONAR_TOKEN."
+      "sonar": "Análisis en SonarQube (configuracion-frontal sonar: la clave sale del nombre del paquete). Antes, npm run cobertura; el token, en SONAR_TOKEN."
     },
     "devDependencies": {
       "@apuestas-deportivas/catalogo-contrato": "De donde se genera todo: openapi.yaml y asyncapi.yaml. Solo al generar: lo generado no depende de él. Por ruta en local; por versión cuando esté el registro de GitLab.",
-      "@eslint/js": "Reglas base de ESLint.",
       "@types/chai": "Tipos de chai.",
       "@types/mocha": "Tipos de mocha.",
       "@types/node": "Tipos de Node.",
       "c8": "Cobertura de código, con el umbral del 90 %.",
       "chai": "Aserciones de las pruebas (expect).",
       "eslint": "Linter: npm run lint.",
-      "eslint-config-prettier": "Apaga las reglas de ESLint que chocarían con Prettier.",
       "mocha": "Ejecuta las pruebas unitarias.",
       "openapi-typescript": "Genera los tipos de src/generado/contrato.ts.",
       "prettier": "Formato del código: npm run format.",
       "sonarqube-scanner": "Análisis en SonarQube: npm run sonar.",
       "tsx": "Ejecuta TypeScript sin compilar: Mocha, Cucumber y los scripts lo cargan.",
       "typescript": "El compilador. En la 5.9: openapi-typescript y typescript-eslint aún no admiten la 7.",
-      "typescript-eslint": "Reglas de ESLint para TypeScript, con información de tipos (strictTypeChecked).",
-      "yaml": "Para leer los dos ficheros del contrato en scripts/generar.ts."
+      "yaml": "Para leer los dos ficheros del contrato en scripts/generar.ts.",
+      "@apuestas-deportivas/configuracion-frontal": "ESLint, Prettier y las opciones base del compilador, comunes a todo el frontal."
     }
   },
   "scripts": {
@@ -61,30 +59,29 @@
     "tipos": "npm run generar && tsc --noEmit",
     "lint": "npm run generar && eslint -c config/eslint.config.mjs .",
     "lint:fix": "eslint -c config/eslint.config.mjs --fix .",
-    "format": "prettier --config config/prettier.config.json --write \"{src,tests,config,scripts}/**/*.{ts,mjs,json}\" \"*.{ts,json}\"",
-    "format:check": "prettier --config config/prettier.config.json --check \"{src,tests,config,scripts}/**/*.{ts,mjs,json}\" \"*.{ts,json}\"",
-    "test": "npm run generar && mocha --config config/mocharc.json",
-    "cobertura": "npm run generar && node -e \"require('node:fs').rmSync('artifacts/compilado', {recursive: true, force: true})\" && tsc -p config/tsconfig.cobertura.json && c8 --config config/c8rc.json mocha --config config/mocharc.cobertura.json",
+    "format": "prettier --write \"{src,tests,config,scripts}/**/*.{ts,mjs,cjs,json}\" \"*.{ts,json}\"",
+    "format:check": "prettier --check \"{src,tests,config,scripts}/**/*.{ts,mjs,cjs,json}\" \"*.{ts,json}\"",
+    "test": "npm run generar && mocha --config config/mocharc.cjs",
+    "cobertura": "npm run generar && configuracion-frontal cobertura",
     "verify": "npm run tipos && npm run lint && npm run format:check && npm run cobertura",
-    "sonar": "sonar-scanner -Dproject.settings=config/sonar-project.properties"
+    "sonar": "configuracion-frontal sonar"
   },
   "devDependencies": {
-    "@apuestas-deportivas/catalogo-contrato": "file:../../../contratos/Apuestas/Catalogo",
-    "@eslint/js": "10.0.1",
+    "@apuestas-deportivas/catalogo-contrato": "0.0.0",
+    "@apuestas-deportivas/configuracion-frontal": "0.0.0",
     "@types/chai": "5.2.3",
     "@types/mocha": "10.0.10",
     "@types/node": "24.19.2",
     "c8": "12.0.0",
     "chai": "6.3.0",
     "eslint": "10.14.0",
-    "eslint-config-prettier": "10.1.8",
     "mocha": "12.0.3",
     "openapi-typescript": "7.13.0",
     "prettier": "3.9.10",
     "sonarqube-scanner": "5.0.2",
     "tsx": "4.23.15",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.72.1",
     "yaml": "2.9.1"
-  }
+  },
+  "prettier": "@apuestas-deportivas/configuracion-frontal/prettier"
 }

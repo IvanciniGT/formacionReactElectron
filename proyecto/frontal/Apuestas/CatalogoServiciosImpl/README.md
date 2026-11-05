@@ -86,25 +86,35 @@ contrato cambia, el compilador marca la línea exacta.
 
 **Las de caja negra no son de esta librería**: son las que tiene que pasar cualquier
 implementación de `ServicioEventos`, y vienen del paquete del TCK. Aquí solo se dice
-contra qué se ejecutan, en `tests/sistema/soporte/`:
+contra qué se ejecutan, en `tests/sistema/`:
 
-- `registrar.ts`: elige el entorno según `PERFIL_PRUEBAS` y le pasa a `registrarPruebas`
-  el Cucumber de esta librería y su `crearServicioEventos`. El TCK crea el servicio con
-  esa fábrica: se prueba exactamente lo que usará la aplicación.
-- El entorno del perfil `fake` es `EntornoFake`, del propio
+- `soporte/registrar.ts`: le pasa a `registrarPruebas` el Cucumber de esta librería y su
+  `crearServicioEventos`. El TCK crea el servicio con esa fábrica: se prueba exactamente lo
+  que usará la aplicación.
+- `perfiles/`: un fichero por entorno, y cada perfil de cucumber (`config/cucumber.mjs`)
+  importa el suyo. El de `fake.ts` es `EntornoFake`, del propio
   [backend fake](../CatalogoBackendFake/README.md) (`…/catalogo-backend-fake/pruebas`):
   vale para cualquier implementación, no solo para esta.
 
-**Los mismos escenarios del TCK son de sistema o de integración según el perfil**
-(`PERFIL_PRUEBAS`):
+**Los mismos escenarios del TCK son de sistema o de integración según el perfil**:
 
 | Script | Perfil | Contra qué | Qué se ejecuta |
 |---|---|---|---|
-| `npm run sistema` | `fake` | El backend fake, arrancado y controlado por cada escenario | Todo |
-| `URL_BACKEND=https://… npm run integracion` | `remoto` | El backend de verdad, desplegado | Lo que no necesita controlar el backend; lo demás sale saltado |
+| `npm run sistema` | `default` → `perfiles/fake.ts` | El backend fake, arrancado y controlado por cada escenario | Todo |
+| `npm run integracion` | `integracion` → `perfiles/remoto.ts` | El backend de verdad, en `URL_BACKEND` | Lo que no necesita controlar el backend; lo demás sale saltado |
 
-`integracion` no va en `verify`: necesita el backend desplegado. Sin `URL_BACKEND`, o con un
-perfil que no existe, falla al empezar diciendo qué falta.
+El perfil va en la configuración de cucumber, y `tsx` se registra desde `config/tsx.mjs`,
+para que los scripts no lleven variables (`X=… comando` solo funciona en bash). La única
+que hay que poner es la URL del backend, y se pone según la shell:
+
+```bash
+URL_BACKEND=https://… npm run integracion                 # bash, zsh
+$env:URL_BACKEND="https://…"; npm run integracion         # PowerShell
+set URL_BACKEND=https://… && npm run integracion          # cmd
+```
+
+`integracion` no va en `verify`: necesita el backend desplegado. Sin `URL_BACKEND` falla al
+empezar diciendo cómo ponerla.
 
 **Las de caja blanca** (`caja-blanca.feature`) comprueban lo que desde fuera no se ve o
 no se puede provocar: que al dejar de ver un evento el servidor da la suscripción por
@@ -129,14 +139,14 @@ de la cobertura unitaria: no tienen lógica nuestra, y los ejercitan las de sist
 
 ## Trabajar con él
 
-Necesita construidos sus vecinos, en local:
+Se instala desde la raíz del proyecto, una vez para todos los paquetes (ver
+[*El frontal y los contratos*](../../../README.md#el-frontal-y-los-contratos-npm-workspaces)):
 
 ```bash
-(cd ../CatalogoModelosServidor && npm install && npm run build)
-(cd ../CatalogoServiciosApi && npm install && npm run build)
-(cd ../CatalogoBackendFake && npm install)
-(cd ../CatalogoServiciosApiPruebas && npm install)
+# Una vez, en la raíz del proyecto (proyecto/):
 npm install
+npm run build
+# Y en esta carpeta:
 npm run verify       # tipos, ESLint, Prettier, unitarias con cobertura y sistema
 ```
 
@@ -150,9 +160,9 @@ npm run verify       # tipos, ESLint, Prettier, unitarias con cobertura y sistem
 | `verify` | Todo: lo que tiene que pasar antes de subir |
 | `sonar` | Análisis en SonarQube: `SONAR_TOKEN=… npm run sonar`, después de `cobertura` |
 
-Las dependencias propias van por ruta (`file:../CatalogoServiciosApi`, `file:../CatalogoModelosServidor`,
-`file:../CatalogoBackendFake`, `file:../CatalogoServiciosApiPruebas`): npm enlaza las carpetas, sin registro. Cuando esté el
-registro de GitLab, se cambian por versiones.
+Las dependencias propias van por versión (`0.0.0`), y con los workspaces npm las enlaza a
+sus carpetas, sin registro. Cuando esté el registro de GitLab, las mismas líneas valen para
+instalarlas de allí.
 
 ## Dónde está cada cosa
 
@@ -163,10 +173,11 @@ con su ruta:
 
 | Fichero | De qué |
 |---|---|
-| `config/tsconfig.build.json` | La compilación a `dist/` |
-| `config/tsconfig.cobertura.json` | La compilación con la que se mide la cobertura |
-| `config/mocharc.json` · `config/mocharc.cobertura.json` | Mocha, para el día a día y para la cobertura |
-| `config/c8rc.json` | c8: qué se mide, umbrales e informes |
-| `config/cucumber.json` | Cucumber (solo en la implementación) |
-| `config/eslint.config.mjs` · `config/prettier.config.json` | ESLint y Prettier |
-| `config/sonar-project.properties` | SonarQube |
+| `config/tsconfig.build.json` | La compilación a `dist/`: solo extiende la común |
+| `config/tsconfig.cobertura.json` | La compilación con la que se mide la cobertura: extiende la común |
+| `config/mocharc.cjs` | Mocha para el día a día: reexporta la común (la de la cobertura la pone `configuracion-frontal cobertura`) |
+| `config/c8rc.json` | c8: **solo qué se mide**. Umbrales e informes son los comunes, y los junta `configuracion-frontal cobertura` |
+| `config/cucumber.mjs` · `config/tsx.mjs` | Cucumber, y el registro de tsx para que cargue los `.ts` |
+| `config/eslint.config.mjs` | ESLint: una llamada a la configuración común |
+
+Lo común (Prettier, la base de TypeScript, los umbrales de cobertura y SonarQube) está en [Configuracion](../../Comun/Configuracion/README.md). Prettier se indica con la clave `prettier` de `package.json`, y Sonar no tiene fichero: `configuracion-frontal sonar` saca la clave del nombre del paquete.

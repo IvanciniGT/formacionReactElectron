@@ -1,0 +1,36 @@
+{
+  "name": "apuestas-deportivas",
+  "private": true,
+  "description": "Junta los paquetes npm del proyecto (contratos y frontal) como workspaces: una sola instalación, y cada paquete usa el código de sus vecinos sin publicar nada. Lo mismo que ApuestasDeportivas.slnx con los del backend.",
+  "//": {
+    "nota": "npm no admite comentarios en este fichero; esta clave la ignora a propósito.",
+    "workspaces": "En orden de dependencias, y a propósito sin comodines: npm ejecuta los scripts de --workspaces en este orden, y cada paquete necesita construidos los anteriores.",
+    "scripts": {
+      "build": "Construye los paquetes que tienen build, en orden.",
+      "verify": "Construye y pasa el verify de todos: lo que tiene que pasar antes de subir.",
+      "format": "Formatea todos los paquetes.",
+      "sonar": "Análisis en SonarQube de los que lo tienen. Antes, npm run verify (deja la cobertura); el token, en SONAR_TOKEN."
+    },
+    "overrides": "Versiones corregidas de dependencias de otras (npm audit), solo en los rangos vulnerables: glob y minimatch vienen de mocha, c8 y eslint; node-forge, de sonarqube-scanner. Lo que npm propone (bajar mocha, c8, eslint, typescript-eslint y el scanner de versión mayor) es peor. Se quitan cuando esas herramientas traigan ya las corregidas: npm audit sin overrides lo dice."
+  },
+  "workspaces": [
+    "frontal/Comun/Configuracion",
+    "contratos/Apuestas/Catalogo",
+    "frontal/Apuestas/CatalogoModelosServidor",
+    "frontal/Apuestas/CatalogoServiciosApi",
+    "frontal/Apuestas/CatalogoServiciosApiPruebas",
+    "frontal/Apuestas/CatalogoBackendFake",
+    "frontal/Apuestas/CatalogoServiciosImpl"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "verify": "npm run build && npm run verify --workspaces --if-present",
+    "format": "npm run format --workspaces --if-present",
+    "sonar": "npm run sonar --workspaces --if-present"
+  },
+  "overrides": {
+    "glob@^13.0.0": "^14.0.2",
+    "minimatch@^10.0.0": "^11.0.1",
+    "node-forge@^1.0.0": "^1.4.1"
+  }
+}

@@ -10,7 +10,7 @@ export interface ConfiguracionServicioEventos {
   // intentar y las suscripciones terminan con ServicioNoDisponibleError. [] es no
   // reintentar.
   readonly esperasReconexionMs: readonly number[];
-  // Desarrollo, 1, 2, 3, 4, 
+  // Desarrollo, 1, 2, 3, 4,
   // Producción: 1, 10, 30, 60
   readonly nivelDeRegistro: NivelDeRegistro;
 }

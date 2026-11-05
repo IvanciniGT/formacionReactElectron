@@ -116,8 +116,14 @@ donde se define.
 
 ## Validar los ficheros
 
+Se instala desde la raíz del proyecto, una vez para todos los paquetes (ver
+[*El frontal y los contratos*](../../../README.md#el-frontal-y-los-contratos-npm-workspaces)):
+
 ```bash
+# Una vez, en la raíz del proyecto (proyecto/):
 npm install
+npm run build
+# Y en esta carpeta:
 npm run validar      # openapi.yaml con Redocly; asyncapi.yaml con el parser de AsyncAPI
 ```
 

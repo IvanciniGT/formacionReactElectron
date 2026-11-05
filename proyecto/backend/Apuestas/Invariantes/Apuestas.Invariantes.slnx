@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="tests/Apuestas.Invariantes.Pruebas/Apuestas.Invariantes.Pruebas.csproj" />
+  <Project Path="src/Apuestas.Invariantes/Apuestas.Invariantes.csproj" />
+</Solution>

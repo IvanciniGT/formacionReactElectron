@@ -1,7 +1,7 @@
 // Saca los campos de cada modelo con el compilador de TypeScript: en ejecución los tipos ya
 // no existen, así que es la única forma de mirarlos. Se le pregunta al compilador lo mismo
 // que al pasar el ratón en el editor, con herencias, uniones y alias resueltos.
-import { dirname, join, relative } from "node:path";
+import { dirname, join, relative, sep } from "node:path";
 import ts from "typescript";
 import type { Campo, Campos, Correspondencia } from "./comparar.js";
 
@@ -26,11 +26,13 @@ export interface Extraido {
 
 function especificador(desde: string, origen: Origenes, ruta: string): string {
   if (!ruta.startsWith(".")) return ruta;
-  const rel = relative(dirname(desde), join(origen.raiz, ruta)).replace(
-    /\.ts$/,
-    ".js",
-  );
-  return rel.startsWith(".") ? rel : `./${rel}`;
+  // Con «/» también en Windows: un import con «\» no se resuelve. Y siempre con «./»
+  // delante, que también vale si sube («./../x»).
+  const rel = relative(dirname(desde), join(origen.raiz, ruta))
+    .split(sep)
+    .join("/")
+    .replace(/\.ts$/, ".js");
+  return `./${rel}`;
 }
 
 // Un fichero que no existe en disco: un alias de tipo por cada lado de cada par.
@@ -123,6 +125,9 @@ export function extraer(
   });
   const campos = (nombre: string): Campos => {
     const nodo = alias.get(nombre);
+    // No puede pasar: fuenteDePares escribe F<i> y S<i> para cada par, y si no compilara
+    // ya habría fallado arriba. Está para que TypeScript sepa que hay nodo.
+    /* c8 ignore next */
     if (!nodo) throw new Error(`No se ha generado ${nombre}.`);
     return camposDe(checker, checker.getTypeAtLocation(nodo), nodo);
   };
@@ -131,10 +136,9 @@ export function extraer(
     programa.getSourceFile(modelos) as ts.SourceFile,
   );
   const nombres = (modulo ? checker.getExportsOfModule(modulo) : [])
-    .filter((s) =>
-      (s.declarations ?? []).some(
-        (d) => ts.isInterfaceDeclaration(d) || ts.isTypeAliasDeclaration(d),
-      ),
+    .filter(
+      (s) =>
+        (s.flags & (ts.SymbolFlags.Interface | ts.SymbolFlags.TypeAlias)) !== 0,
     )
     .filter((s) => esModelo(checker.getDeclaredTypeOfSymbol(s)))
     .map((s) => s.name);

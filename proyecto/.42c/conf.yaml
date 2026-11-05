@@ -1,3 +1,0 @@
-apis:
-  contratos/Apuestas/Catalogo/openapi.yaml:
-    alias: cat-logo-de-apuestas-api-del-jug

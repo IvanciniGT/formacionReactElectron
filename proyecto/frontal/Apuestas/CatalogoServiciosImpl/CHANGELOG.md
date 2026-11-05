@@ -12,6 +12,7 @@ Todos los cambios de este proyecto, en formato
 ## [Unreleased]
 
 ### Added
+- Prueba de que, al perder la conexión, una suscripción nueva hecha en ese momento (un reintento) no termina con las demás.
 - `ServicioEventosHttp`: implementación de `ServicioEventos` con `fetch` (REST) y SignalR (tiempo real), con reconexión desde la última marca.
 - Mappers a mano de los modelos del servidor (de `catalogo-modelos-servidor`) a los del frontal.
 - `ConexionTiempoReal` y `adaptarHubConnection`, para aislar SignalR y poder probar sin él.
@@ -21,3 +22,9 @@ Todos los cambios de este proyecto, en formato
 - Pruebas unitarias (Mocha, Chai, Sinon, c8).
 - Pruebas de sistema: las del TCK (caja negra) y las propias (caja blanca), contra el backend fake (`npm run sistema`).
 - Pruebas de integración: las del TCK contra un backend desplegado (`URL_BACKEND=… npm run integracion`).
+- `sistema` e `integracion` funcionan también en Windows: el entorno lo elige el perfil de cucumber y `tsx` se registra desde `config/tsx.mjs`, sin variables en los scripts.
+
+### Changed
+- La barra final de la URL base se quita sin expresión regular: `/\/+$/` tarda el cuadrado de lo que mide con muchas barras seguidas.
+- Mocha, la cobertura y SonarQube vienen de `configuracion-frontal`: `config/mocharc.cjs`, `config/c8rc.json` solo con lo que se cubre, y sin `sonar-project.properties`.
+- Instalación desde la raíz del proyecto (npm workspaces). ESLint, Prettier y las opciones base de TypeScript vienen de `@apuestas-deportivas/configuracion-frontal`; las dependencias propias, por versión y no por `file:`.

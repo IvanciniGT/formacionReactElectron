@@ -6,7 +6,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./features/*": "./features/*"
+    "./features/*": "./features/*",
+    "./datos/catalogo.json": "./datos/catalogo.json"
   },
   "files": [
     "src",
@@ -33,24 +34,22 @@
     "devDependencies": {
       "@apuestas-deportivas/catalogo-servicios-api": "Para los tipos mientras se escribe el TCK; en uso real lo pone la implementación.",
       "@cucumber/cucumber": "Para los tipos mientras se escribe el TCK; en uso real lo pone la implementación.",
-      "@eslint/js": "Ver el package.json de CatalogoServiciosApi.",
       "@types/chai": "Tipos y aserciones mientras se escribe el TCK.",
       "@types/node": "Ver el package.json de CatalogoServiciosApi.",
       "chai": "Tipos y aserciones mientras se escribe el TCK.",
       "eslint": "Ver el package.json de CatalogoServiciosApi.",
-      "eslint-config-prettier": "Ver el package.json de CatalogoServiciosApi.",
       "prettier": "Ver el package.json de CatalogoServiciosApi.",
       "rxjs": "Para los tipos mientras se escribe el TCK; en uso real lo pone la implementación.",
       "typescript": "Ver el package.json de CatalogoServiciosApi.",
-      "typescript-eslint": "Ver el package.json de CatalogoServiciosApi."
+      "@apuestas-deportivas/configuracion-frontal": "ESLint, Prettier y las opciones base del compilador, comunes a todo el frontal."
     }
   },
   "scripts": {
     "tipos": "tsc --noEmit",
     "lint": "eslint -c config/eslint.config.mjs .",
     "lint:fix": "eslint -c config/eslint.config.mjs --fix .",
-    "format": "prettier --config config/prettier.config.json --write \"{src,config}/**/*.{ts,mjs,json}\" \"*.json\"",
-    "format:check": "prettier --config config/prettier.config.json --check \"{src,config}/**/*.{ts,mjs,json}\" \"*.json\"",
+    "format": "prettier --write \"{src,config}/**/*.{ts,mjs,cjs,json}\" \"*.json\"",
+    "format:check": "prettier --check \"{src,config}/**/*.{ts,mjs,cjs,json}\" \"*.json\"",
     "verify": "npm run tipos && npm run lint && npm run format:check"
   },
   "peerDependencies": {
@@ -59,17 +58,16 @@
     "chai": "^6.0.0"
   },
   "devDependencies": {
-    "@apuestas-deportivas/catalogo-servicios-api": "file:../CatalogoServiciosApi",
+    "@apuestas-deportivas/catalogo-servicios-api": "0.0.0",
+    "@apuestas-deportivas/configuracion-frontal": "0.0.0",
     "@cucumber/cucumber": "13.3.0",
-    "@eslint/js": "10.0.1",
     "@types/chai": "5.2.3",
     "@types/node": "24.19.2",
     "chai": "6.3.0",
     "eslint": "10.14.0",
-    "eslint-config-prettier": "10.1.8",
     "prettier": "3.9.10",
     "rxjs": "7.8.2",
-    "typescript": "5.9.3",
-    "typescript-eslint": "8.72.1"
-  }
+    "typescript": "5.9.3"
+  },
+  "prettier": "@apuestas-deportivas/configuracion-frontal/prettier"
 }

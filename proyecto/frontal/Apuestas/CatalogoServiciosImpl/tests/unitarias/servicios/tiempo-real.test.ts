@@ -131,6 +131,24 @@ describe("ServicioEventosHttp · tiempo real", () => {
     }
   });
 
+  it("si al perder la conexión alguien se vuelve a suscribir en ese momento, la nueva no termina", async () => {
+    const deLaNueva: unknown[] = [];
+    servicio.cambios(ID_EVENTO, "7").subscribe({
+      // Lo que haría un reintento: volver a suscribirse en cuanto llega el error.
+      error: () => {
+        servicio
+          .cambios(ID_EVENTO, "7")
+          .subscribe({ error: (e: unknown) => deLaNueva.push(e) });
+      },
+    });
+    await esperar();
+
+    conexion.cerrarse(new Error("sin red"));
+    await esperar();
+
+    expect(deLaNueva).to.deep.equal([]);
+  });
+
   it("después de perder la conexión, la siguiente suscripción la vuelve a abrir", async () => {
     suscribir();
     await esperar();

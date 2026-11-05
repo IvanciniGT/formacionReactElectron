@@ -1,16 +1,7 @@
 {
+  "extends": "@apuestas-deportivas/configuracion-frontal/tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "verbatimModuleSyntax": true,
-    "isolatedModules": true,
-    "skipLibCheck": true,
     "declaration": true,
-    "sourceMap": true,
     "outDir": "dist",
     "types": ["node", "mocha"]
   },

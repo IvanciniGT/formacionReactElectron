@@ -16,3 +16,10 @@ contrato que cambie un esquema es una versión nueva de este paquete.
 - Los modelos del servidor del catálogo generados del contrato: los del API REST (`openapi.yaml`) y los mensajes del hub (`asyncapi.yaml`), todo `readonly`.
 - `LIMITES_SERVIDOR`: los límites de cada campo según el contrato, por esquema.
 - `ESQUEMAS_SERVIDOR` (`./esquemas`): los esquemas combinados, para inicializar los modelos del frontal.
+
+### Changed
+- Mocha, la cobertura y SonarQube vienen de `configuracion-frontal`: `config/mocharc.cjs`, `config/c8rc.json` solo con lo que se cubre, y sin `sonar-project.properties`.
+- Instalación desde la raíz del proyecto (npm workspaces). ESLint, Prettier y las opciones base de TypeScript vienen de `@apuestas-deportivas/configuracion-frontal`; las dependencias propias, por versión y no por `file:`.
+
+### Fixed
+- `generar`: la carpeta de destino se muestra bien en Windows (salía `/C:/…`).

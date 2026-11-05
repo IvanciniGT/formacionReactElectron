@@ -3,6 +3,7 @@
 // regenera (npm run generar).
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import openapiTS, { astToString } from "openapi-typescript";
+import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
 import {
   combinar,
@@ -60,4 +61,4 @@ writeFileSync(
 export const ESQUEMAS_SERVIDOR: Readonly<Record<string, unknown>> = ${JSON.stringify(documento.components.schemas, null, 2)};
 `,
 );
-console.log(`Generado ${DESTINO.pathname}`);
+console.log(`Generado ${fileURLToPath(DESTINO)}`);

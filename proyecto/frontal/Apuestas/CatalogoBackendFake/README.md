@@ -3,11 +3,15 @@
 Un **fake del backend del catálogo**, en TypeScript. En la clasificación de dobles de prueba
 es un *fake*: una implementación que funciona de verdad, pero con un atajo (los datos en
 memoria en vez de en una base de datos). No es un *stub* (no devuelve respuestas fijas:
-calcula) ni un *mock* (no comprueba llamadas). Sirve el el API REST de
+calcula) ni un *mock* (no comprueba llamadas). Sirve el API REST de
 [`openapi.yaml`](../../../contratos/Apuestas/Catalogo/openapi.yaml) y el hub SignalR de
-[`asyncapi.yaml`](../../../contratos/Apuestas/Catalogo/asyncapi.yaml), con los datos de
-[`datos/eventos.json`](datos/eventos.json). Es para las pruebas de sistema y para probar
-los frontales a mano. No se publica.
+[`asyncapi.yaml`](../../../contratos/Apuestas/Catalogo/asyncapi.yaml), con los datos de prueba del
+[TCK](../CatalogoServiciosApiPruebas/datos/catalogo.json). Es para las pruebas de sistema y
+para probar los frontales a mano. No se publica.
+
+Los datos no son suyos a propósito: son los que esperan los escenarios del TCK, y el TCK
+tiene que poder cargarlos también en el backend de verdad, donde el fake no existe. Con un
+solo catálogo de prueba no hay dos copias que se separen.
 
 ## Por qué no json-server
 
@@ -18,8 +22,14 @@ equivalente, y menos para SignalR, que tiene su propio protocolo.
 
 ## Arrancarlo a mano
 
+Se instala desde la raíz del proyecto, una vez para todos los paquetes (ver
+[*El frontal y los contratos*](../../../README.md#el-frontal-y-los-contratos-npm-workspaces)):
+
 ```bash
+# Una vez, en la raíz del proyecto (proyecto/):
 npm install
+npm run build
+# Y en esta carpeta:
 npm start -- --puerto 5080 --mover-cada-ms 3000
 ```
 
@@ -89,10 +99,9 @@ con su ruta:
 
 | Fichero | De qué |
 |---|---|
-| `config/tsconfig.build.json` | La compilación a `dist/` |
-| `config/tsconfig.cobertura.json` | La compilación con la que se mide la cobertura |
-| `config/mocharc.json` · `config/mocharc.cobertura.json` | Mocha, para el día a día y para la cobertura |
-| `config/c8rc.json` | c8: qué se mide, umbrales e informes |
-| `config/cucumber.json` | Cucumber (solo en la implementación) |
-| `config/eslint.config.mjs` · `config/prettier.config.json` | ESLint y Prettier |
-| `config/sonar-project.properties` | SonarQube |
+| `config/tsconfig.cobertura.json` | La compilación con la que se mide la cobertura: extiende la común |
+| `config/mocharc.cjs` | Mocha para el día a día: reexporta la común (la de la cobertura la pone `configuracion-frontal cobertura`) |
+| `config/c8rc.json` | c8: **solo qué se mide**. Umbrales e informes son los comunes, y los junta `configuracion-frontal cobertura` |
+| `config/eslint.config.mjs` | ESLint: una llamada a la configuración común |
+
+Lo común (Prettier, la base de TypeScript, los umbrales de cobertura y SonarQube) está en [Configuracion](../../Comun/Configuracion/README.md). Prettier se indica con la clave `prettier` de `package.json`, y Sonar no tiene fichero: `configuracion-frontal sonar` saca la clave del nombre del paquete.

@@ -1,0 +1,9 @@
+# Saltos de línea LF en todo el repo, también al clonar en Windows. Sin esto, git con
+# core.autocrlf=true (lo normal en Windows) descarga CRLF y prettier (endOfLine: lf) hace
+# fallar format:check, y con él verify, en todos los paquetes.
+* text=auto eol=lf
+
+# Los scripts de Windows sí van con CRLF: cmd los necesita así.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf

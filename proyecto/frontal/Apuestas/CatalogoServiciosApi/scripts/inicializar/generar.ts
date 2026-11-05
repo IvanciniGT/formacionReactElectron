@@ -44,7 +44,7 @@ export interface Inicializacion {
   };
 }
 
-const nombreDe = (ref: string) => ref.split("/").at(-1) ?? ref;
+const nombreDe = (ref: string) => ref.slice(ref.lastIndexOf("/") + 1);
 const esObjeto = (e: Esquema) =>
   e.properties !== undefined || e.allOf !== undefined;
 
@@ -69,14 +69,14 @@ function tipo(e: Esquema): string {
     }
     default:
       return e.properties
-        ? `{ ${campos(e, undefined, undefined, "").join(" ")} }`
+        ? `{ ${campos(e.properties, e.required, undefined, undefined, "").join(" ")} }`
         : "unknown";
   }
 }
 
 function comentario(lineas: readonly string[], sangria: string): string[] {
-  if (lineas.length === 0) return [];
-  if (lineas.length === 1) return [`${sangria}/** ${lineas[0] ?? ""} */`];
+  // Ninguna o una línea: en una sola, /** … */.
+  if (lineas.length <= 1) return lineas.map((l) => `${sangria}/** ${l} */`);
   return [
     `${sangria}/**`,
     ...lineas.map((l) => `${sangria} * ${l}`.trimEnd()),
@@ -92,13 +92,14 @@ function descripcion(e: Esquema): string[] {
 }
 
 function campos(
-  e: Esquema,
+  propiedades: Readonly<Record<string, Esquema>>,
+  requeridos: readonly string[] | undefined,
   limites: Limites[string] | undefined,
   modelo: string | undefined,
   sangria = "  ",
 ): string[] {
-  const obligatorios = new Set(e.required);
-  return Object.entries(e.properties ?? {}).flatMap(([nombre, campo]) => {
+  const obligatorios = new Set(requeridos);
+  return Object.entries(propiedades).flatMap(([nombre, campo]) => {
     const doc = descripcion(campo);
     if (modelo && limites?.[nombre])
       doc.push(`Ver {@link LIMITES.${modelo}.${nombre}}.`);
@@ -116,13 +117,16 @@ function modelo(nombre: string, e: Esquema, limites: Limites): string {
     return [...doc, `export type ${nombre} = ${tipo(e)};`].join("\n");
 
   const partes = e.allOf ?? [e];
-  const base = partes.filter((p) => p.$ref).map((p) => nombreDe(p.$ref ?? ""));
+  const base = partes.flatMap((p) => (p.$ref ? [nombreDe(p.$ref)] : []));
   const propias = partes
     .filter((p) => !p.$ref)
-    .reduce<Esquema>(
+    .reduce<{
+      properties: Readonly<Record<string, Esquema>>;
+      required: readonly string[];
+    }>(
       (todo, p) => ({
         properties: { ...todo.properties, ...p.properties },
-        required: [...(todo.required ?? []), ...(p.required ?? [])],
+        required: [...todo.required, ...(p.required ?? [])],
       }),
       { properties: {}, required: [] },
     );
@@ -130,7 +134,7 @@ function modelo(nombre: string, e: Esquema, limites: Limites): string {
   return [
     ...doc,
     `export interface ${nombre}${extiende} {`,
-    ...campos(propias, limites[nombre], nombre),
+    ...campos(propias.properties, propias.required, limites[nombre], nombre),
     "}",
   ].join("\n");
 }

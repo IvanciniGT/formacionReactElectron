@@ -1,0 +1,13 @@
+{
+  // Lo que se mide con c8: src/ y las pruebas unitarias compilados por tsc, no por tsx (tsx
+  // añade funciones auxiliares que descuadran la cobertura). Un paquete con más que medir
+  // (sus scripts) redefine "include".
+  "compilerOptions": {
+    "rootDir": "${configDir}/..",
+    "outDir": "${configDir}/../artifacts/compilado",
+    "declaration": false,
+    "sourceMap": true,
+    "noEmit": false
+  },
+  "include": ["${configDir}/../src", "${configDir}/../tests/unitarias"]
+}

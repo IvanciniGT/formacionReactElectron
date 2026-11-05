@@ -1,0 +1,14 @@
+{
+  // Lo que se publica: src/ compilado a dist/, con sus .d.ts. Las rutas llevan ${configDir}
+  // (la carpeta del tsconfig que extiende, config/ del paquete), no la de este fichero.
+  // Se extiende junto al tsconfig.json del paquete, que pone los tipos y el resto:
+  //   "extends": ["../tsconfig.json", "@apuestas-deportivas/configuracion-frontal/tsconfig.build.json"]
+  "compilerOptions": {
+    "rootDir": "${configDir}/../src",
+    "outDir": "${configDir}/../dist",
+    "declaration": true,
+    "noEmit": false,
+    "types": []
+  },
+  "include": ["${configDir}/../src"]
+}

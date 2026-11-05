@@ -1,0 +1,60 @@
+{
+  "name": "@apuestas-deportivas/configuracion-frontal",
+  "version": "0.0.0",
+  "description": "La configuración de herramientas que comparten los paquetes TypeScript del frontal: ESLint, Prettier, TypeScript, Mocha y c8, y las tareas de cobertura y SonarQube.",
+  "type": "module",
+  "exports": {
+    "./eslint": "./eslint.mjs",
+    "./prettier": "./prettier.mjs",
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./tsconfig.build.json": "./tsconfig.build.json",
+    "./tsconfig.cobertura.json": "./tsconfig.cobertura.json",
+    "./mocharc.json": "./mocharc.json",
+    "./c8.json": "./c8.json"
+  },
+  "files": [
+    "bin",
+    "eslint.mjs",
+    "prettier.mjs",
+    "tsconfig.base.json",
+    "tsconfig.build.json",
+    "tsconfig.cobertura.json",
+    "mocharc.json",
+    "mocharc.cobertura.json",
+    "c8.json",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "//": {
+    "nota": "npm no admite comentarios en este fichero; esta clave la ignora a propósito.",
+    "dependencies": "Los plugins de ESLint van aquí y no en cada paquete: son parte de la configuración, y cada paquete solo tiene que pedir la configuración.",
+    "peerDependencies": "Las herramientas en sí las pone cada paquete, que es quien las ejecuta. c8, mocha y sonarqube-scanner son opcionales: un paquete sin pruebas unitarias o sin Sonar (el TCK) no las necesita."
+  },
+  "dependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint-config-prettier": "10.1.8",
+    "typescript-eslint": "8.72.1"
+  },
+  "peerDependencies": {
+    "c8": "^12.0.0",
+    "eslint": "^10.0.0",
+    "mocha": "^12.0.0",
+    "prettier": "^3.0.0",
+    "sonarqube-scanner": "^5.0.0",
+    "typescript": "^5.9.0"
+  },
+  "bin": {
+    "configuracion-frontal": "bin/configuracion-frontal.mjs"
+  },
+  "peerDependenciesMeta": {
+    "c8": {
+      "optional": true
+    },
+    "mocha": {
+      "optional": true
+    },
+    "sonarqube-scanner": {
+      "optional": true
+    }
+  }
+}

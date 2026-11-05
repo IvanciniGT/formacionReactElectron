@@ -19,3 +19,9 @@ obligatorio, endurecer una validación.
 - `CodigoProblema`: los mismos códigos de error en REST (`Problema.codigo`, con `type`, `parametro` y `eventoId`) y en el hub (al principio del texto del error de `Suscribir`), para que el frontal los distinga vengan de donde vengan.
 - Validaciones de cada campo, con `x-invariante` donde salen de una invariante del dominio. Los decimales de las cuotas, en `x-decimales`: con `multipleOf` los validadores en coma flotante rechazan cuotas válidas.
 - Ejemplos completos de cada respuesta REST, de cada error y de cada mensaje del hub, con los mismos ids en todos para poder seguir una pantalla de principio a fin.
+
+### Changed
+- Instalación desde la raíz del proyecto (npm workspaces).
+
+### Fixed
+- `validar`: funciona en Windows (la ruta del asyncapi.yaml salía como `C:\C:\…`).

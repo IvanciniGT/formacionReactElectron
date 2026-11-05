@@ -33,6 +33,7 @@ import {
   aParametros,
   aTipoEvento,
 } from "../mappers/mappers.js";
+import { sinBarrasFinales } from "../url/url.js";
 import type {
   CambioDeEventoServidor,
   CambiosServidor,
@@ -82,7 +83,7 @@ export class ServicioEventosHttp implements ServicioEventos {
     dependencias: DependenciasServicioEventos = {},
   ) {
     comprobarConfiguracion(configuracion);
-    this.urlBase = configuracion.urlBase.replace(/\/+$/, "");
+    this.urlBase = sinBarrasFinales(configuracion.urlBase);
     this.tiempoMaximoPeticionMs = configuracion.tiempoMaximoPeticionMs;
     this.fetch = dependencias.fetch ?? globalThis.fetch.bind(globalThis);
     this.conexion = dependencias.conexion ?? conexionSignalR(configuracion);
@@ -125,7 +126,7 @@ export class ServicioEventosHttp implements ServicioEventos {
         "se ha perdido la conexión en tiempo real y no se ha podido recuperar",
         { cause: error },
       );
-      for (const suscripcion of [...this.suscripciones.values()])
+      for (const suscripcion of this.suscripcionesDeAhora())
         this.terminarConError(suscripcion, perdida);
     });
   }
@@ -206,7 +207,7 @@ export class ServicioEventosHttp implements ServicioEventos {
 
   // Cierra la conexión en tiempo real y termina todas las suscripciones.
   async cerrar(): Promise<void> {
-    for (const suscripcion of [...this.suscripciones.values()]) {
+    for (const suscripcion of this.suscripcionesDeAhora()) {
       this.suscripciones.delete(suscripcion.eventoId);
       suscripcion.suscriptor.complete();
     }
@@ -260,6 +261,13 @@ export class ServicioEventosHttp implements ServicioEventos {
     this.suscripciones.delete(eventoId);
     suscripcion.suscriptor.next({ tipo: "recargar" });
     suscripcion.suscriptor.complete();
+  }
+
+  // Una copia, no el Map en vivo: al terminar una suscripción, quien la tenía puede volver a
+  // suscribirse en ese mismo momento (un reintento), y esa nueva no es de las que terminan.
+  // Recorriendo el Map, también se terminaría.
+  private suscripcionesDeAhora(): readonly Suscripcion[] {
+    return [...this.suscripciones.values()];
   }
 
   private terminarConError(suscripcion: Suscripcion, error: unknown): void {
