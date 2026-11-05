@@ -1,0 +1,6 @@
+{
+  "extends": [
+    "../tsconfig.json",
+    "@apuestas-deportivas/configuracion-frontal/tsconfig.build.json"
+  ]
+}

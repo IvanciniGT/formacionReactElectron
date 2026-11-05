@@ -1,0 +1,51 @@
+{
+  "name": "@apuestas-deportivas/catalogo-estado",
+  "version": "0.0.0",
+  "description": "El estado del catálogo para las aplicaciones del jugador, con Redux Toolkit: eventos, grupos, mercados y selecciones, al día en tiempo real. Sin React: lo comparten la web y la consola de Electron.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "prettier": "@apuestas-deportivas/configuracion-frontal/prettier",
+  "scripts": {
+    "build": "tsc -p config/tsconfig.build.json",
+    "tipos": "tsc --noEmit",
+    "lint": "eslint -c config/eslint.config.mjs .",
+    "format": "prettier --write \"{src,tests,config}/**/*.{ts,mjs,cjs,json}\" \"*.json\"",
+    "format:check": "prettier --check \"{src,tests,config}/**/*.{ts,mjs,cjs,json}\" \"*.json\"",
+    "test": "mocha --config config/mocharc.cjs",
+    "sistema": "mocha --config config/mocharc.sistema.cjs",
+    "cobertura": "configuracion-frontal cobertura",
+    "verify": "npm run tipos && npm run lint && npm run format:check && npm run cobertura && npm run sistema"
+  },
+  "dependencies": {
+    "@apuestas-deportivas/catalogo-servicios-api": "0.0.0",
+    "@reduxjs/toolkit": "2.14.0"
+  },
+  "peerDependencies": {
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@apuestas-deportivas/catalogo-backend-fake": "0.0.0",
+    "@apuestas-deportivas/catalogo-servicios-impl": "0.0.0",
+    "@apuestas-deportivas/configuracion-frontal": "0.0.0",
+    "@types/chai": "5.2.3",
+    "@types/mocha": "10.0.10",
+    "@types/node": "24.19.2",
+    "c8": "12.0.0",
+    "chai": "6.3.0",
+    "eslint": "10.14.0",
+    "mocha": "12.0.3",
+    "prettier": "3.9.10",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3"
+  }
+}

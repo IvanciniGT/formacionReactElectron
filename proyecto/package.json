@@ -20,7 +20,8 @@
     "frontal/Apuestas/CatalogoServiciosApi",
     "frontal/Apuestas/CatalogoServiciosApiPruebas",
     "frontal/Apuestas/CatalogoBackendFake",
-    "frontal/Apuestas/CatalogoServiciosImpl"
+    "frontal/Apuestas/CatalogoServiciosImpl",
+    "frontal/Apuestas/CatalogoEstado"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",

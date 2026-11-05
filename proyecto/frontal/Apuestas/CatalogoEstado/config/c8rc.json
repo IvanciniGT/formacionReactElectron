@@ -1,0 +1,4 @@
+{
+  "include": ["artifacts/compilado/src/**", "src/**"],
+  "exclude": ["src/index.ts"]
+}
