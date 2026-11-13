@@ -1,0 +1,9 @@
+{
+  "extends": "@apuestas-deportivas/configuracion-frontal/tsconfig.base.json",
+  "compilerOptions": {
+    "declaration": true,
+    "outDir": "dist",
+    "types": ["node", "mocha"]
+  },
+  "include": ["src", "tests"]
+}
