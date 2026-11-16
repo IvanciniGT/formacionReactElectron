@@ -1,0 +1,67 @@
+{
+  "name": "@apuestas-deportivas/catalogo-componentes",
+  "version": "0.0.0",
+  "description": "Componentes React del catálogo (el listado de eventos y su item), para las aplicaciones del jugador. No es una aplicación: cada una los monta en la suya.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./estilos.css": "./dist/estilos.css"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "prettier": "@apuestas-deportivas/configuracion-frontal/prettier",
+  "scripts": {
+    "build": "vite build && tsc -p config/tsconfig.build.json",
+    "tipos": "tsc --noEmit",
+    "lint": "eslint -c config/eslint.config.mjs .",
+    "format": "prettier --write \"{src,tests,dobles,app-pruebas,config}/**/*.{ts,tsx,css,html,mjs,json}\" \"*.{json,ts}\"",
+    "format:check": "prettier --check \"{src,tests,dobles,app-pruebas,config}/**/*.{ts,tsx,css,html,mjs,json}\" \"*.{json,ts}\"",
+    "test": "vitest run",
+    "cobertura": "vitest run --coverage",
+    "app": "vite --config app-pruebas/vite.config.ts",
+    "verify": "npm run tipos && npm run lint && npm run format:check && npm run cobertura"
+  },
+  "dependencies": {
+    "@apuestas-deportivas/catalogo-estado-bueno": "0.0.0",
+    "@apuestas-deportivas/catalogo-servicios-api": "0.0.0"
+  },
+  "peerDependencies": {
+    "@reduxjs/toolkit": "^2.14.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-redux": "^9.3.1"
+  },
+  "devDependencies": {
+    "@apuestas-deportivas/configuracion-frontal": "0.0.0",
+    "@reduxjs/toolkit": "2.14.0",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.12",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.3.0",
+    "@vitest/coverage-v8": "5.1.0",
+    "eslint": "10.14.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "jsdom": "31.0.1",
+    "prettier": "3.9.10",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-redux": "9.3.1",
+    "react-router": "8.5.1",
+    "rxjs": "7.8.2",
+    "typescript": "5.9.3",
+    "vite": "8.3.8",
+    "vitest": "5.1.0"
+  }
+}

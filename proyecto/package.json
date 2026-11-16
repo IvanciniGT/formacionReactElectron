@@ -22,7 +22,8 @@
     "frontal/Apuestas/CatalogoBackendFake",
     "frontal/Apuestas/CatalogoServiciosImpl",
     "frontal/Apuestas/CatalogoEstado",
-    "frontal/Apuestas/CatalogoEstadoBueno"
+    "frontal/Apuestas/CatalogoEstadoBueno",
+    "frontal/Apuestas/CatalogoComponentes"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",

@@ -1,0 +1,13 @@
+{
+  // El JavaScript y el CSS los construye Vite; tsc solo deja los tipos (.d.ts).
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "sourceMap": false,
+    "rootDir": "../src",
+    "outDir": "../dist"
+  },
+  "include": ["../src"]
+}

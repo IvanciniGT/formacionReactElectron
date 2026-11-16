@@ -4,7 +4,7 @@ import type {
   ServicioEventos,
 } from "@apuestas-deportivas/catalogo-servicios-api";
 import { seleccionarCatalogo } from "../../src/selectores.js";
-import { eventosPedidos } from "../../src/acciones.js";
+import { solicitarListadoEventos } from "../../src/acciones.js";
 import { seleccionarEventos } from "../../src/selectores.js";
 import { crearStoreAnfitrion } from "../store-de-prueba.js";
 
@@ -19,7 +19,7 @@ describe("el slice, inyectado en un store", () => {
   it("antes de inyectarlo, se lee como recién creado y sus acciones no hacen nada", async () => {
     const { store } = crearStoreAnfitrion();
 
-    store.dispatch(eventosPedidos());
+    store.dispatch(solicitarListadoEventos());
     await esperar();
 
     expect(seleccionarEventos(store.getState())).to.deep.equal([]);
@@ -32,7 +32,7 @@ describe("el slice, inyectado en un store", () => {
     const { store, inyectarCatalogo } = crearStoreAnfitrion();
 
     inyectarCatalogo(servicio);
-    store.dispatch(eventosPedidos());
+    store.dispatch(solicitarListadoEventos());
     await esperar();
 
     expect(seleccionarEventos(store.getState()).map((e) => e.id)).to.deep.equal(

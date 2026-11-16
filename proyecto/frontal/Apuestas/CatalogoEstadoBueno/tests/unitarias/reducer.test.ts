@@ -1,10 +1,10 @@
 import { expect } from "chai";
 import {
-  cambioRecibido,
-  eventoCargado,
-  eventoPedido,
-  grupoAbierto,
-  mercadosCargados,
+  recibirCambio,
+  recibirEvento,
+  solicitarEvento,
+  abrirGrupo,
+  recibirMercados,
 } from "../../src/acciones.js";
 import type { EstadoEvento } from "../../src/estado.js";
 import { reducerEvento } from "../../src/reducer.js";
@@ -19,15 +19,15 @@ const tras = (...acciones: Parameters<typeof reducerEvento>[1][]) =>
 
 describe("evento", () => {
   const abierto = [
-    eventoPedido("e1"),
-    eventoCargado(detalle()),
-    grupoAbierto("principales"),
-    mercadosCargados([mercado("m1"), mercado("m2")]),
+    solicitarEvento("e1"),
+    recibirEvento(detalle()),
+    abrirGrupo("principales"),
+    recibirMercados([mercado("m1"), mercado("m2")]),
   ];
 
   it("al pedirlo se marca que se carga; al llegar, queda el detalle", () => {
-    expect(tras(eventoPedido("e1")).carga).to.equal("cargando");
-    const estado = tras(eventoPedido("e1"), eventoCargado(detalle()));
+    expect(tras(solicitarEvento("e1")).carga).to.equal("cargando");
+    const estado = tras(solicitarEvento("e1"), recibirEvento(detalle()));
     expect(estado.carga).to.equal("listo");
     expect(estado.detalle?.nombre).to.equal("Evento e1");
   });
@@ -35,7 +35,7 @@ describe("evento", () => {
   it("un cambio de cuota llega al principal y al mismo mercado en el grupo", () => {
     const estado = tras(
       ...abierto,
-      cambioRecibido({
+      recibirCambio({
         tipo: "cuotas",
         marca: "11",
         cuotas: [
@@ -64,7 +64,7 @@ describe("evento", () => {
   it("un mercado suspendido no admite apuestas; uno que ya no se ve, desaparece", () => {
     const estado = tras(
       ...abierto,
-      cambioRecibido({
+      recibirCambio({
         tipo: "cuotas",
         marca: "11",
         cuotas: [],
@@ -83,37 +83,39 @@ describe("evento", () => {
   it("el estado del evento: en juego está en directo; uno final se apunta aparte", () => {
     const enJuego = tras(
       ...abierto,
-      cambioRecibido({ tipo: "estado", marca: "11", estado: "enJuego" }),
+      recibirCambio({ tipo: "estado", marca: "11", estado: "enJuego" }),
     );
     expect(enJuego.detalle).to.include({ estado: "enJuego", enDirecto: true });
 
     const final = tras(
       ...abierto,
-      cambioRecibido({ tipo: "estado", marca: "12", estado: "finalizado" }),
+      recibirCambio({ tipo: "estado", marca: "12", estado: "finalizado" }),
     );
     expect(final.final).to.equal("finalizado");
     expect(final.detalle?.estado).to.equal("programado");
   });
 
   it("al volver a pedir el mismo evento (recarga) se conserva el grupo; otro, no", () => {
-    expect(tras(...abierto, eventoPedido("e1")).grupo).to.equal("principales");
-    expect(tras(...abierto, eventoPedido("e2")).grupo).to.equal(undefined);
+    expect(tras(...abierto, solicitarEvento("e1")).grupo).to.equal(
+      "principales",
+    );
+    expect(tras(...abierto, solicitarEvento("e2")).grupo).to.equal(undefined);
   });
 
   it("un cambio sin evento cargado no hace nada", () => {
     const estado = tras(
-      cambioRecibido({ tipo: "estado", marca: "1", estado: "enJuego" }),
+      recibirCambio({ tipo: "estado", marca: "1", estado: "enJuego" }),
     );
     expect(estado.detalle).to.equal(undefined);
   });
 
   it("sin mercado principal, los cambios llegan igual a los del grupo", () => {
     const estado = tras(
-      eventoPedido("e1"),
-      eventoCargado({ ...detalle(), mercadoPrincipal: null }),
-      grupoAbierto("principales"),
-      mercadosCargados([mercado("m1")]),
-      cambioRecibido({
+      solicitarEvento("e1"),
+      recibirEvento({ ...detalle(), mercadoPrincipal: null }),
+      abrirGrupo("principales"),
+      recibirMercados([mercado("m1")]),
+      recibirCambio({
         tipo: "cuotas",
         marca: "11",
         cuotas: [

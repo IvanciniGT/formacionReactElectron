@@ -1,0 +1,51 @@
+.pagina {
+  max-width: 850px;
+  margin: 3rem auto;
+  padding: 0 1.5rem;
+}
+
+.etiqueta {
+  font-size: 0.85rem;
+  font-weight: 650;
+  color: #475569;
+}
+
+.ayuda {
+  color: #475569;
+  line-height: 1.6;
+}
+
+.demo {
+  margin: 2rem 0;
+}
+
+.desmontado {
+  padding: 1.5rem;
+  border: 2px dashed #94a3b8;
+  border-radius: 0.85rem;
+  color: #475569;
+}
+
+.evento {
+  margin: 0.75rem 0 0;
+  font-family: ui-monospace, monospace;
+  font-size: 0.875rem;
+  color: #475569;
+}
+
+.panel {
+  padding: 1.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.85rem;
+  background: #fff;
+}
+
+.panel h2 {
+  margin-top: 0;
+}
+
+.mandos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}

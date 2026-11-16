@@ -14,6 +14,8 @@ export const seleccionarEventos = (estado: EstadoConCatalogo) =>
   seleccionarCatalogo(estado).listado.eventos;
 export const seleccionarCargaCatalogo = (estado: EstadoConCatalogo) =>
   seleccionarCatalogo(estado).listado.carga;
+export const seleccionarErrorCatalogo = (estado: EstadoConCatalogo) =>
+  seleccionarCatalogo(estado).listado.error;
 
 // Del evento abierto
 

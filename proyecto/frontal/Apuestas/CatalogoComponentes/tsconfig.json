@@ -1,0 +1,15 @@
+{
+  "extends": "@apuestas-deportivas/configuracion-frontal/tsconfig.base.json",
+  // La base es para Node (NodeNext). Aquí quien resuelve los imports es Vite, que entiende
+  // JSX y los .module.css: por eso Bundler y los tipos de vite/client. vite.config.ts no
+  // va en include: lo analiza el proyecto por defecto de la configuración común (*.ts).
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client"],
+    "noEmit": true
+  },
+  "include": ["src", "tests", "dobles", "app-pruebas"]
+}

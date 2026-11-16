@@ -3,20 +3,20 @@
 import { combineReducers, createReducer, type Draft } from "@reduxjs/toolkit";
 import type { Mercado } from "@apuestas-deportivas/catalogo-servicios-api";
 import {
-  cambioRecibido,
-  enVivoIniciado,
-  enVivoTerminado,
-  eventoCargado,
-  eventoCerrado,
-  eventoFallido,
-  eventoPedido,
-  eventosCargados,
-  eventosFallidos,
-  eventosPedidos,
-  filtroCambiado,
-  grupoAbierto,
-  mercadosCargados,
-  mercadosFallidos,
+  recibirCambio,
+  iniciarEnVivo,
+  terminarEnVivo,
+  recibirEvento,
+  cerrarEvento,
+  recibirErrorEvento,
+  solicitarEvento,
+  recibirListadoEventos,
+  recibirErrorListadoEventos,
+  solicitarListadoEventos,
+  cambiarFiltro,
+  abrirGrupo,
+  recibirMercados,
+  recibirErrorMercados,
   type CambioAplicable,
 } from "./acciones.js";
 import { inicialEvento, inicialListado, type EstadoEvento } from "./estado.js";
@@ -24,21 +24,21 @@ import { inicialEvento, inicialListado, type EstadoEvento } from "./estado.js";
 // La propiedad «listado»
 export const reducerListado = createReducer(inicialListado, (cuando) =>
   cuando
-    .addCase(filtroCambiado, (estado, { payload }) => {
+    .addCase(cambiarFiltro, (estado, { payload }) => {
       estado.filtro = payload;
     })
-    .addCase(eventosPedidos, (estado) => {
+    .addCase(solicitarListadoEventos, (estado) => {
       estado.carga = "cargando";
       delete estado.error;
     })
     // Lo que viene de la API (readonly hasta el fondo) no se mete en el borrador de Immer,
     // que es mutable: se devuelve el estado nuevo.
-    .addCase(eventosCargados, (estado, { payload }) => ({
+    .addCase(recibirListadoEventos, (estado, { payload }) => ({
       ...estado,
       carga: "listo" as const,
       eventos: [...payload],
     }))
-    .addCase(eventosFallidos, (estado, { payload: motivo }) => {
+    .addCase(recibirErrorListadoEventos, (estado, { payload: motivo }) => {
       // Los eventos que hubiera se quedan: mejor una lista vieja que una pantalla vacía.
       estado.carga = "error";
       estado.error = motivo;
@@ -87,31 +87,31 @@ function aplicarCuotas(
 export const reducerEvento = createReducer(inicialEvento, (cuando) =>
   cuando
     // El evento abierto
-    .addCase(eventoPedido, (estado, { payload: id }) => ({
+    .addCase(solicitarEvento, (estado, { payload: id }) => ({
       // Si es el mismo (una recarga), se conserva el grupo abierto: se volverá a cargar.
       ...inicialEvento,
       id,
       carga: "cargando" as const,
       ...(estado.id === id && estado.grupo ? { grupo: estado.grupo } : {}),
     }))
-    .addCase(eventoCargado, (estado, { payload }) => {
+    .addCase(recibirEvento, (estado, { payload }) => {
       const { error: _, ...resto } = estado;
       return { ...resto, detalle: payload, carga: "listo" as const };
     })
-    .addCase(eventoFallido, (estado, { payload: motivo }) => {
+    .addCase(recibirErrorEvento, (estado, { payload: motivo }) => {
       estado.carga = "error";
       estado.error = motivo;
     })
-    .addCase(eventoCerrado, () => inicialEvento)
+    .addCase(cerrarEvento, () => inicialEvento)
 
     // Su grupo de mercados
-    .addCase(grupoAbierto, (estado, { payload: clave }) => {
+    .addCase(abrirGrupo, (estado, { payload: clave }) => {
       estado.grupo = clave;
       estado.mercados = [];
       estado.cargaMercados = "cargando";
       delete estado.errorMercados;
     })
-    .addCase(mercadosCargados, (estado, { payload }) => {
+    .addCase(recibirMercados, (estado, { payload }) => {
       const { errorMercados: _, ...resto } = estado;
       return {
         ...resto,
@@ -119,21 +119,21 @@ export const reducerEvento = createReducer(inicialEvento, (cuando) =>
         cargaMercados: "listo" as const,
       };
     })
-    .addCase(mercadosFallidos, (estado, { payload: motivo }) => {
+    .addCase(recibirErrorMercados, (estado, { payload: motivo }) => {
       estado.cargaMercados = "error";
       estado.errorMercados = motivo;
     })
 
     // El tiempo real
-    .addCase(enVivoIniciado, (estado) => {
+    .addCase(iniciarEnVivo, (estado) => {
       estado.enVivo = true;
       delete estado.errorEnVivo;
     })
-    .addCase(enVivoTerminado, (estado, { payload: motivo }) => {
+    .addCase(terminarEnVivo, (estado, { payload: motivo }) => {
       estado.enVivo = false;
       if (motivo !== undefined) estado.errorEnVivo = motivo;
     })
-    .addCase(cambioRecibido, (estado, { payload: cambio }) => {
+    .addCase(recibirCambio, (estado, { payload: cambio }) => {
       if (!estado.detalle) return;
       estado.detalle.marca = cambio.marca;
       switch (cambio.tipo) {

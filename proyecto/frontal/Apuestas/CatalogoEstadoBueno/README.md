@@ -27,9 +27,14 @@ tests/
 └── sistema/             contra el backend fake: una cuota cambia y llega sola
 ```
 
-Las acciones son las mismas que en `catalogo-estado`, con los mismos `type`. La diferencia
-está en cómo se declaran: aquí se usan `createAction` y `createReducer`, cada uno en su
-fichero, en vez de `createSlice`, que junta las acciones y el reducer.
+Las acciones son las 14 de `catalogo-estado`, con dos diferencias:
+
+- **Se nombran con un verbo en infinitivo**, como las operaciones del modelo de estado:
+  `solicitarListadoEventos`, `recibirListadoEventos`, `solicitarEvento`, `cerrarEvento`…
+  Los `type` cambian igual (`catalogo/solicitarListadoEventos`). La guía de RTK recomienda
+  nombrarlas en pasado (`eventosPedidos`), y así es como están en `catalogo-estado`.
+- **Se declaran con `createAction` y `createReducer`**, cada uno en su fichero, en vez de
+  con `createSlice`, que junta las acciones y el reducer.
 
 ## Inyectarlo en un store
 

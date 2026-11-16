@@ -5,11 +5,11 @@ import type {
   ServicioEventos,
 } from "@apuestas-deportivas/catalogo-servicios-api";
 import { Subject } from "rxjs";
-import { eventosPedidos, filtroCambiado } from "../../src/acciones.js";
+import { solicitarListadoEventos, cambiarFiltro } from "../../src/acciones.js";
 import {
-  eventoCerrado,
-  eventoPedido,
-  grupoAbierto,
+  cerrarEvento,
+  solicitarEvento,
+  abrirGrupo,
 } from "../../src/acciones.js";
 import { seleccionarCatalogo } from "../../src/selectores.js";
 import { crearStore } from "../store-de-prueba.js";
@@ -46,13 +46,13 @@ describe("efectos", () => {
     const { servicio } = servicioFalso();
     const store = crearStore(servicio);
 
-    store.dispatch(eventosPedidos());
+    store.dispatch(solicitarListadoEventos());
     await esperar();
     expect(
       seleccionarCatalogo(store.getState()).listado.eventos.map((e) => e.id),
     ).to.deep.equal(["todos"]);
 
-    store.dispatch(filtroCambiado({ tipo: "futbol" }));
+    store.dispatch(cambiarFiltro({ tipo: "futbol" }));
     await esperar();
     expect(
       seleccionarCatalogo(store.getState()).listado.eventos.map((e) => e.id),
@@ -63,7 +63,7 @@ describe("efectos", () => {
     const { servicio, cambios, llamadas } = servicioFalso();
     const store = crearStore(servicio);
 
-    store.dispatch(eventoPedido("e1"));
+    store.dispatch(solicitarEvento("e1"));
     await esperar();
     expect(llamadas.cambios).to.deep.equal(["e1@10"]);
     expect(seleccionarCatalogo(store.getState()).evento.enVivo).to.equal(true);
@@ -77,9 +77,9 @@ describe("efectos", () => {
   it("con «recargar», vuelve a cargar el evento y su grupo, y a seguirlo", async () => {
     const { servicio, cambios, llamadas } = servicioFalso();
     const store = crearStore(servicio);
-    store.dispatch(eventoPedido("e1"));
+    store.dispatch(solicitarEvento("e1"));
     await esperar();
-    store.dispatch(grupoAbierto("principales"));
+    store.dispatch(abrirGrupo("principales"));
     await esperar();
 
     cambios.next({ tipo: "recargar" });
@@ -98,10 +98,10 @@ describe("efectos", () => {
   it("al cerrar el evento deja de seguirlo", async () => {
     const { servicio, cambios } = servicioFalso();
     const store = crearStore(servicio);
-    store.dispatch(eventoPedido("e1"));
+    store.dispatch(solicitarEvento("e1"));
     await esperar();
 
-    store.dispatch(eventoCerrado());
+    store.dispatch(cerrarEvento());
     await esperar();
 
     expect(cambios.observed).to.equal(false);
@@ -110,7 +110,7 @@ describe("efectos", () => {
   it("si el servicio deja de mandar cambios por un error, se apunta por qué", async () => {
     const { servicio, cambios } = servicioFalso();
     const store = crearStore(servicio);
-    store.dispatch(eventoPedido("e1"));
+    store.dispatch(solicitarEvento("e1"));
     await esperar();
 
     cambios.error(new Error("sin conexión"));
@@ -138,8 +138,8 @@ describe("efectos", () => {
     });
     const store = crearStore(lento);
 
-    store.dispatch(eventoPedido("lento"));
-    store.dispatch(eventoPedido("rapido"));
+    store.dispatch(solicitarEvento("lento"));
+    store.dispatch(solicitarEvento("rapido"));
     await esperar();
     soltarPrimero?.();
     await esperar();
@@ -159,8 +159,8 @@ describe("efectos", () => {
     });
     const store = crearStore(fallan);
 
-    store.dispatch(eventosPedidos());
-    store.dispatch(eventoPedido("e1"));
+    store.dispatch(solicitarListadoEventos());
+    store.dispatch(solicitarEvento("e1"));
     await esperar();
 
     expect(seleccionarCatalogo(store.getState()).listado).to.include({
@@ -179,10 +179,10 @@ describe("efectos", () => {
       listarMercados: () => Promise.reject(new Error("grupo no válido")),
     });
     const store = crearStore(fallan);
-    store.dispatch(eventoPedido("e1"));
+    store.dispatch(solicitarEvento("e1"));
     await esperar();
 
-    store.dispatch(grupoAbierto("raro"));
+    store.dispatch(abrirGrupo("raro"));
     await esperar();
 
     expect(seleccionarCatalogo(store.getState()).evento).to.include({
@@ -194,7 +194,7 @@ describe("efectos", () => {
   it("si el servicio termina los cambios sin error, se deja de seguir sin motivo", async () => {
     const { servicio, cambios } = servicioFalso();
     const store = crearStore(servicio);
-    store.dispatch(eventoPedido("e1"));
+    store.dispatch(solicitarEvento("e1"));
     await esperar();
 
     cambios.complete();
@@ -217,7 +217,7 @@ describe("efectos", () => {
     });
     const store = crearStore(cuenta);
 
-    store.dispatch(grupoAbierto("principales"));
+    store.dispatch(abrirGrupo("principales"));
     await esperar();
 
     expect(pedidos).to.equal(0);
@@ -241,13 +241,13 @@ describe("efectos", () => {
         }),
     });
     const store = crearStore(lento);
-    store.dispatch(eventoPedido("e1"));
+    store.dispatch(solicitarEvento("e1"));
     await esperar();
 
-    store.dispatch(filtroCambiado({ tipo: "viejo" }));
-    store.dispatch(filtroCambiado({ tipo: "nuevo" }));
-    store.dispatch(grupoAbierto("viejo"));
-    store.dispatch(grupoAbierto("nuevo"));
+    store.dispatch(cambiarFiltro({ tipo: "viejo" }));
+    store.dispatch(cambiarFiltro({ tipo: "nuevo" }));
+    store.dispatch(abrirGrupo("viejo"));
+    store.dispatch(abrirGrupo("nuevo"));
     // Las respuestas llegan al revés: primero la última.
     for (const s of soltar.reverse()) s();
     await esperar();

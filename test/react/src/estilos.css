@@ -1,0 +1,38 @@
+/* Lo general de la página. Lo de cada componente va en su .module.css. */
+:root {
+  font-family: system-ui, sans-serif;
+  color: #0f172a;
+  background: #f1f5f9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(2rem, 5vw, 3rem);
+  margin: 0.6rem 0;
+}
+
+button {
+  padding: 0.75rem 1rem;
+  border: 1px solid #334155;
+  border-radius: 0.45rem;
+  background: #1e293b;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #334155;
+}
+
+button:focus-visible {
+  outline: 3px solid #60a5fa;
+  outline-offset: 2px;
+}

@@ -1,0 +1,46 @@
+.app {
+  display: grid;
+  grid-template-columns: 16rem 1fr;
+  min-height: 100vh;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem;
+  background: #1d2433;
+}
+
+.titulo {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  color: #fff;
+}
+
+.enlace {
+  padding: 0.375rem 0.5rem;
+  border-radius: 0.25rem;
+  color: #c8cdd6;
+  text-decoration: none;
+}
+
+.enlace:hover {
+  background: #2c3548;
+}
+
+.activo {
+  background: #3a4560;
+  color: #fff;
+}
+
+.pagina {
+  max-width: 48rem;
+  padding: 1.5rem;
+}
+
+@media (max-width: 40rem) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+}

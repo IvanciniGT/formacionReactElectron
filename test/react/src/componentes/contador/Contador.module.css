@@ -1,0 +1,26 @@
+/* CSS Modules: Vite renombra cada clase (.titulo pasa a ser algo como .titulo_x7f2), así
+   que no choca con un .titulo de otro componente. */
+.contador {
+  padding: 1.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.85rem;
+  background: #fff;
+  box-shadow: 0 4px 18px #0f172a0c;
+}
+
+.titulo {
+  margin: 0 0 1rem;
+  font-size: 1.2rem;
+}
+
+.cantidad {
+  display: block;
+  font-size: 3.5rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.nota {
+  margin: 0.3rem 0 1rem;
+  color: #64748b;
+}

@@ -9,6 +9,7 @@ import {
 } from "../../src/selectores.js";
 import {
   seleccionarCargaCatalogo,
+  seleccionarErrorCatalogo,
   seleccionarEventos,
 } from "../../src/selectores.js";
 import { detalle, mercado } from "./datos.js";
@@ -52,6 +53,19 @@ describe("selectores", () => {
       estado.catalogo?.listado.eventos,
     );
     expect(seleccionarCargaCatalogo(estado)).to.equal("listo");
+    expect(seleccionarErrorCatalogo(estado)).to.equal(undefined);
+    expect(
+      seleccionarErrorCatalogo(
+        con({
+          listado: {
+            eventos: [],
+            carga: "error",
+            filtro: {},
+            error: "sin red",
+          },
+        }),
+      ),
+    ).to.equal("sin red");
     expect(seleccionarEvento(estado)).to.equal(evento);
     expect(seleccionarCargaEvento(estado)).to.equal("listo");
     expect(seleccionarEnVivo(estado)).to.equal(true);

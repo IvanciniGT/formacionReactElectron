@@ -5,8 +5,8 @@ import {
 } from "@apuestas-deportivas/catalogo-backend-fake";
 import { crearServicioEventos } from "@apuestas-deportivas/catalogo-servicios-impl";
 import type { ServicioEventos } from "@apuestas-deportivas/catalogo-servicios-api";
-import { eventosPedidos } from "../../src/acciones.js";
-import { eventoCerrado, eventoPedido } from "../../src/acciones.js";
+import { solicitarListadoEventos } from "../../src/acciones.js";
+import { cerrarEvento, solicitarEvento } from "../../src/acciones.js";
 import { seleccionarCatalogo } from "../../src/selectores.js";
 import { crearStore } from "../store-de-prueba.js";
 
@@ -40,20 +40,20 @@ describe("el estado, contra el backend fake", function () {
   });
 
   afterEach(async () => {
-    store.dispatch(eventoCerrado());
+    store.dispatch(cerrarEvento());
     await servicio.cerrar();
     await fake.parar();
   });
 
   it("carga los eventos, abre uno, y una cuota que cambia en el servidor llega sola", async () => {
-    store.dispatch(eventosPedidos());
+    store.dispatch(solicitarListadoEventos());
     await esperarA(
       () => seleccionarCatalogo(store.getState()).listado.carga === "listo",
     );
     const [primero] = seleccionarCatalogo(store.getState()).listado.eventos;
     if (!primero) throw new Error("El fake no tiene eventos.");
 
-    store.dispatch(eventoPedido(primero.id));
+    store.dispatch(solicitarEvento(primero.id));
     await esperarA(() => seleccionarCatalogo(store.getState()).evento.enVivo);
     const seleccion = seleccionarCatalogo(store.getState()).evento.detalle
       ?.mercadoPrincipal?.selecciones[0];
